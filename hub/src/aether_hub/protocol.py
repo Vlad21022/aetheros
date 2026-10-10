@@ -23,6 +23,8 @@ class _Model(BaseModel):
 # --- shared shapes ---------------------------------------------------------
 
 TileKind = Literal["light", "lock", "climate", "computer", "media", "sensor", "switch", "cover"]
+TapAction = Literal["toggle", "turn_on", "turn_off"]
+PlaybackControl = Literal["toggle", "next", "previous"]
 
 
 class Tile(_Model):
@@ -32,6 +34,7 @@ class Tile(_Model):
     state: str = Field(max_length=60)
     active: bool
     alert: bool | None = None
+    tap: TapAction | None = None
 
 
 class Home(_Model):
@@ -58,6 +61,8 @@ class NowPlaying(_Model):
     subtitle: str | None = Field(default=None, max_length=120)
     playing: bool
     progress: float | None = Field(default=None, ge=0, le=1)
+    entityId: str | None = Field(default=None, min_length=1, max_length=255)
+    controls: list[PlaybackControl] | None = Field(default=None, max_length=3)
 
 
 # --- payloads --------------------------------------------------------------
@@ -93,7 +98,7 @@ class UtterancePayload(_Model):
 
 class ControlPayload(_Model):
     entityId: str = Field(min_length=1, max_length=255)
-    action: Literal["toggle", "turn_on", "turn_off", "set"]
+    action: Literal["toggle", "turn_on", "turn_off", "set", "next", "previous"]
     value: float | str | bool | None = None
 
 

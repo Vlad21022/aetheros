@@ -25,7 +25,7 @@ the files in `examples/`.
 | hub → screen | `welcome` | Reply to `hello` |
 | hub → screen | `state.snapshot` | Everything the ambient screen shows; after `welcome` and on reconnect |
 | hub → screen | `state.update` | One section changed (`home`, `weather`, `nextEvent`, `nowPlaying`) |
-| screen → hub | `control` | A tap on a home tile. Tier 0: no model involved. Answered with `action.result`, or `error` (`unknown_entity`, `not_allowed`, `unavailable`) |
+| screen → hub | `control` | A tap on a home tile or a now playing button. Tier 0: no model involved. Answered with `action.result`, or `error` (`unknown_entity`, `not_allowed`, `unavailable`) |
 | screen → hub | `utterance` | Something the user said or typed |
 | hub → screen | `agent.status` | Drives the orb: idle, listening, thinking, speaking, acting |
 | hub → screen | `agent.reply` | Aether's reply, streamed; the last frame has `final: true` |
@@ -50,6 +50,17 @@ screen  confirm.response sleep ─────▶
         ◀───── agent.reply "Gata. Noapte bună." (final)
         ◀───── agent.status idle
 ```
+
+## What can be tapped
+
+The hub says so; a screen holds no rules of its own.
+
+- A tile with `tap` sends `control` with that action and the tile's `entityId`. A tile
+  without `tap` is not a button.
+- `nowPlaying.controls` lists the buttons that work (`toggle`, `next`, `previous`); they
+  send `control` to `nowPlaying.entityId`.
+- The reply is `action.result` or `error`, with `replyTo`. The new state arrives as
+  `state.update`; a screen does not change a tile on its own.
 
 ## Rules
 

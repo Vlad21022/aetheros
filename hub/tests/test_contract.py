@@ -57,3 +57,47 @@ def test_home_cannot_be_cleared():
     assert not VALIDATOR.is_valid(bad)
     with pytest.raises(ValueError):
         p.parse(json.dumps(bad))
+
+
+def _message(kind: str, payload: dict) -> dict:
+    return {"v": 1, "type": kind, "id": "x", "ts": "2026-10-10T13:25:00Z", "payload": payload}
+
+
+@pytest.mark.parametrize("action", ["next", "previous"])
+def test_control_can_skip_tracks(action):
+    msg = _message("control", {"entityId": "media_player.living_room", "action": action})
+    VALIDATOR.validate(msg)
+    assert p.parse(json.dumps(msg)).payload.action == action
+
+
+def test_snapshot_without_the_tap_fields_stays_valid():
+    """What a hub from before tap, entityId and controls sends."""
+    tile = {"entityId": "light.office", "kind": "light", "title": "Birou", "state": "Aprinsă", "active": True}
+    playing = {"source": "TV", "title": "Film", "playing": True}
+    msg = _message("state.snapshot", {"home": {"summary": "", "tiles": [tile]}, "nowPlaying": playing})
+    VALIDATOR.validate(msg)
+    parsed = p.parse(json.dumps(msg))
+    assert parsed.payload.home.tiles[0].tap is None
+    assert parsed.payload.nowPlaying.controls is None
+    assert json.loads(p.dump(parsed)) == msg
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"home": {"summary": "", "tiles": [{"tap": "set"}]}},
+        {"nowPlaying": {"controls": ["toggle", "rewind"]}},
+        {"nowPlaying": {"controls": ["next", "next"]}},
+    ],
+)
+def test_schema_rejects_taps_it_does_not_know(change):
+    tile = {"entityId": "light.office", "kind": "light", "title": "Birou", "state": "Aprinsă", "active": True}
+    payload = {
+        "home": {"summary": "", "tiles": [tile]},
+        "nowPlaying": {"source": "TV", "title": "Film", "playing": True},
+    }
+    if "home" in change:
+        payload["home"]["tiles"][0].update(change["home"]["tiles"][0])
+    else:
+        payload["nowPlaying"].update(change["nowPlaying"])
+    assert not VALIDATOR.is_valid(_message("state.snapshot", payload))
