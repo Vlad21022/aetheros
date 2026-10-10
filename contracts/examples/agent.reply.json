@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "agent.reply",
+  "id": "h7",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "s2",
+  "payload": {
+    "text": "Gata. Noapte bună.",
+    "final": true
+  }
+}

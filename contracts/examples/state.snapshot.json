@@ -1,0 +1,59 @@
+{
+  "v": 1,
+  "type": "state.snapshot",
+  "id": "h2",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "home": {
+      "summary": "Totul e în regulă",
+      "tiles": [
+        {
+          "entityId": "light.group_on",
+          "kind": "light",
+          "title": "Lumini",
+          "state": "3 aprinse",
+          "active": true
+        },
+        {
+          "entityId": "lock.front_door",
+          "kind": "lock",
+          "title": "Ușa",
+          "state": "Încuiată",
+          "active": true
+        },
+        {
+          "entityId": "sensor.living_room_temperature",
+          "kind": "climate",
+          "title": "21,5 °C",
+          "state": "Sufragerie",
+          "active": false
+        },
+        {
+          "entityId": "aether.pc_office",
+          "kind": "computer",
+          "title": "PC birou",
+          "state": "Doarme",
+          "active": false
+        }
+      ]
+    },
+    "weather": {
+      "temperatureC": 14,
+      "condition": "Înnorat",
+      "summary": "ploaie de la 19:00"
+    },
+    "nextEvent": {
+      "title": "Antrenament la sală",
+      "start": "2026-10-10T15:30:00Z",
+      "end": "2026-10-10T16:30:00Z",
+      "note": "Pleacă la 18:05, ia umbrela."
+    },
+    "nowPlaying": {
+      "source": "HomePod sufragerie",
+      "title": "Seară",
+      "subtitle": "Playlist",
+      "playing": false,
+      "progress": 0.38
+    }
+  }
+}

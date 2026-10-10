@@ -1,0 +1,23 @@
+# OS image build
+/os/buildroot/
+/os/output/
+/os/.cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Flutter / Dart
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec_overrides.yaml
+
+# Editors and OS
+.DS_Store
+.idea/
+*.iml

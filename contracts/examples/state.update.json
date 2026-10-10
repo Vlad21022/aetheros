@@ -1,0 +1,10 @@
+{
+  "v": 1,
+  "type": "state.update",
+  "id": "h3",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "section": "nowPlaying",
+    "value": null
+  }
+}

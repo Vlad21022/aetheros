@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "type": "action.result",
+  "id": "h6",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "s3",
+  "payload": {
+    "requestId": "req-pc-off",
+    "ok": true,
+    "message": "PC-ul din birou e în sleep."
+  }
+}

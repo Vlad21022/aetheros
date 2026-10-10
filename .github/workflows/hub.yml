@@ -1,0 +1,25 @@
+name: hub
+
+on:
+  push:
+    branches: [main]
+    paths: ["hub/**", "contracts/**", ".github/workflows/hub.yml"]
+  pull_request:
+    paths: ["hub/**", "contracts/**", ".github/workflows/hub.yml"]
+
+defaults:
+  run:
+    working-directory: hub
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q

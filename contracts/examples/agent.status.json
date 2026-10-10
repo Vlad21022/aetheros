@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "agent.status",
+  "id": "h4",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "s2",
+  "payload": {
+    "state": "thinking",
+    "tier": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "type": "screen.command",
+  "id": "h8",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "command": "dim"
+  }
+}

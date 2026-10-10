@@ -1,0 +1,9 @@
+{
+  "v": 1,
+  "type": "presence",
+  "id": "s5",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "present": true
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "v": 1,
+  "type": "confirm.request",
+  "id": "h5",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "s2",
+  "payload": {
+    "requestId": "req-pc-off",
+    "question": "Opresc și PC-ul din birou?",
+    "detail": "VS Code are 2 fișiere nesalvate. Dacă îl pun în sleep, nu pierzi nimic.",
+    "steps": [
+      {
+        "label": "Lumini · 4 stinse",
+        "status": "done",
+        "kind": "light"
+      },
+      {
+        "label": "Ușa de la intrare",
+        "status": "skipped",
+        "note": "Deja încuiată",
+        "kind": "lock"
+      },
+      {
+        "label": "PC birou",
+        "status": "pending",
+        "kind": "computer"
+      }
+    ],
+    "options": [
+      {
+        "id": "sleep",
+        "label": "Pune PC-ul în sleep",
+        "role": "primary"
+      },
+      {
+        "id": "shutdown",
+        "label": "Oprește oricum",
+        "role": "secondary"
+      },
+      {
+        "id": "cancel",
+        "label": "Lasă-l pornit",
+        "role": "cancel"
+      }
+    ],
+    "expiresAt": "2026-10-10T20:50:00Z"
+  }
+}

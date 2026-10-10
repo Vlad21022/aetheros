@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "welcome",
+  "id": "h1",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "s1",
+  "payload": {
+    "hubName": "AetherOS Hub",
+    "protocol": 1
+  }
+}

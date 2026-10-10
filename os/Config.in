@@ -1,0 +1,2 @@
+# AetherOS packages. Add one line per package, e.g.:
+#   source "$BR2_EXTERNAL_AETHEROS_PATH/package/aetheros-shell/Config.in"

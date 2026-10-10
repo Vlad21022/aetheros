@@ -1,0 +1,17 @@
+name: aether_design
+description: AetherOS design tokens and theme for Flutter. Tokens are generated from design/tokens.json.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

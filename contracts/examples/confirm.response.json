@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "confirm.response",
+  "id": "s3",
+  "ts": "2026-10-10T13:25:00Z",
+  "replyTo": "h5",
+  "payload": {
+    "requestId": "req-pc-off",
+    "optionId": "sleep"
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Vlad21022/aetheros/contracts/aether-protocol.schema.json",
+  "title": "AetherOS hub <-> screen protocol, version 1",
+  "description": "Every WebSocket text frame between the hub and a screen is one Message. See contracts/README.md.",
+  "type": "object",
+  "required": ["v", "type", "id", "ts", "payload"],
+  "properties": {
+    "v": { "const": 1 },
+    "type": { "type": "string" },
+    "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "ts": { "type": "string", "format": "date-time" },
+    "replyTo": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    { "$ref": "#/$defs/msg.hello" },
+    { "$ref": "#/$defs/msg.utterance" },
+    { "$ref": "#/$defs/msg.control" },
+    { "$ref": "#/$defs/msg.presence" },
+    { "$ref": "#/$defs/msg.confirm.response" },
+    { "$ref": "#/$defs/msg.welcome" },
+    { "$ref": "#/$defs/msg.state.snapshot" },
+    { "$ref": "#/$defs/msg.state.update" },
+    { "$ref": "#/$defs/msg.agent.status" },
+    { "$ref": "#/$defs/msg.agent.reply" },
+    { "$ref": "#/$defs/msg.confirm.request" },
+    { "$ref": "#/$defs/msg.action.result" },
+    { "$ref": "#/$defs/msg.screen.command" },
+    { "$ref": "#/$defs/msg.error" }
+  ],
+  "$defs": {
+    "msg.hello": {
+      "description": "screen -> hub. First frame after connecting.",
+      "properties": {
+        "type": { "const": "hello" },
+        "payload": {
+          "type": "object",
+          "required": ["screenId", "name", "protocol", "capabilities", "size"],
+          "properties": {
+            "screenId": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "name": { "type": "string", "maxLength": 80 },
+            "room": { "type": "string", "maxLength": 80 },
+            "protocol": { "const": 1 },
+            "locale": { "type": "string", "maxLength": 16 },
+            "capabilities": {
+              "type": "object",
+              "required": ["touch", "microphone", "speaker", "presence"],
+              "properties": {
+                "touch": { "type": "boolean" },
+                "microphone": { "type": "boolean" },
+                "speaker": { "type": "boolean" },
+                "presence": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            },
+            "size": {
+              "type": "object",
+              "required": ["width", "height"],
+              "properties": {
+                "width": { "type": "integer", "minimum": 1 },
+                "height": { "type": "integer", "minimum": 1 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.utterance": {
+      "description": "screen -> hub. Something the user said or typed.",
+      "properties": {
+        "type": { "const": "utterance" },
+        "payload": {
+          "type": "object",
+          "required": ["text", "source"],
+          "properties": {
+            "text": { "type": "string", "minLength": 1, "maxLength": 2000 },
+            "source": { "enum": ["voice", "typed"] },
+            "locale": { "type": "string", "maxLength": 16 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.control": {
+      "description": "screen -> hub. A direct tap on a home tile (tier 0, no model involved).",
+      "properties": {
+        "type": { "const": "control" },
+        "payload": {
+          "type": "object",
+          "required": ["entityId", "action"],
+          "properties": {
+            "entityId": { "type": "string", "minLength": 1, "maxLength": 255 },
+            "action": { "enum": ["toggle", "turn_on", "turn_off", "set"] },
+            "value": { "type": ["number", "string", "boolean"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.presence": {
+      "description": "screen -> hub. Someone arrived at or left the screen.",
+      "properties": {
+        "type": { "const": "presence" },
+        "payload": {
+          "type": "object",
+          "required": ["present"],
+          "properties": { "present": { "type": "boolean" } },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.confirm.response": {
+      "description": "screen -> hub. The user's answer to a confirm.request.",
+      "properties": {
+        "type": { "const": "confirm.response" },
+        "payload": {
+          "type": "object",
+          "required": ["requestId", "optionId"],
+          "properties": {
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "optionId": { "type": "string", "minLength": 1, "maxLength": 64 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.welcome": {
+      "description": "hub -> screen. Reply to hello.",
+      "properties": {
+        "type": { "const": "welcome" },
+        "payload": {
+          "type": "object",
+          "required": ["hubName", "protocol"],
+          "properties": {
+            "hubName": { "type": "string", "maxLength": 80 },
+            "protocol": { "const": 1 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.state.snapshot": {
+      "description": "hub -> screen. Everything the ambient screen shows. Sent after welcome and whenever the screen reconnects.",
+      "properties": {
+        "type": { "const": "state.snapshot" },
+        "payload": {
+          "type": "object",
+          "required": ["home"],
+          "properties": {
+            "home": { "$ref": "#/$defs/Home" },
+            "weather": { "$ref": "#/$defs/Weather" },
+            "nextEvent": { "$ref": "#/$defs/Event" },
+            "nowPlaying": { "$ref": "#/$defs/NowPlaying" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.state.update": {
+      "description": "hub -> screen. Replaces one section of the snapshot. A null value clears it (not allowed for home).",
+      "properties": {
+        "type": { "const": "state.update" },
+        "payload": {
+          "type": "object",
+          "required": ["section", "value"],
+          "oneOf": [
+            { "properties": { "section": { "const": "home" }, "value": { "$ref": "#/$defs/Home" } } },
+            { "properties": { "section": { "const": "weather" }, "value": { "oneOf": [{ "$ref": "#/$defs/Weather" }, { "type": "null" }] } } },
+            { "properties": { "section": { "const": "nextEvent" }, "value": { "oneOf": [{ "$ref": "#/$defs/Event" }, { "type": "null" }] } } },
+            { "properties": { "section": { "const": "nowPlaying" }, "value": { "oneOf": [{ "$ref": "#/$defs/NowPlaying" }, { "type": "null" }] } } }
+          ],
+          "properties": {
+            "section": { "enum": ["home", "weather", "nextEvent", "nowPlaying"] },
+            "value": {}
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.agent.status": {
+      "description": "hub -> screen. Drives the agent orb.",
+      "properties": {
+        "type": { "const": "agent.status" },
+        "payload": {
+          "type": "object",
+          "required": ["state"],
+          "properties": {
+            "state": { "enum": ["idle", "listening", "thinking", "speaking", "acting"] },
+            "tier": { "enum": [0, 1, 2] }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.agent.reply": {
+      "description": "hub -> screen. Aether's reply text. Streams as several frames with final=false, then one with final=true.",
+      "properties": {
+        "type": { "const": "agent.reply" },
+        "payload": {
+          "type": "object",
+          "required": ["text", "final"],
+          "properties": {
+            "text": { "type": "string", "maxLength": 8000 },
+            "final": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.confirm.request": {
+      "description": "hub -> screen. A consequential action waits for the user. The screen shows the confirmation sheet.",
+      "properties": {
+        "type": { "const": "confirm.request" },
+        "payload": {
+          "type": "object",
+          "required": ["requestId", "question", "steps", "options"],
+          "properties": {
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "question": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "detail": { "type": "string", "maxLength": 600 },
+            "steps": {
+              "type": "array",
+              "maxItems": 12,
+              "items": {
+                "type": "object",
+                "required": ["label", "status"],
+                "properties": {
+                  "label": { "type": "string", "minLength": 1, "maxLength": 120 },
+                  "status": { "enum": ["done", "pending", "failed", "skipped"] },
+                  "note": { "type": "string", "maxLength": 120 },
+                  "kind": { "$ref": "#/$defs/TileKind" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 3,
+              "items": {
+                "type": "object",
+                "required": ["id", "label", "role"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+                  "role": { "enum": ["primary", "secondary", "cancel"] }
+                },
+                "additionalProperties": false
+              }
+            },
+            "expiresAt": { "type": "string", "format": "date-time" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.action.result": {
+      "description": "hub -> screen. What happened after an action ran.",
+      "properties": {
+        "type": { "const": "action.result" },
+        "payload": {
+          "type": "object",
+          "required": ["ok", "message"],
+          "properties": {
+            "requestId": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "ok": { "type": "boolean" },
+            "message": { "type": "string", "maxLength": 300 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.screen.command": {
+      "description": "hub -> screen. The screen as a device the agent can control.",
+      "properties": {
+        "type": { "const": "screen.command" },
+        "payload": {
+          "type": "object",
+          "required": ["command"],
+          "properties": {
+            "command": { "enum": ["dim", "wake", "set_brightness", "set_theme"] },
+            "value": { "type": ["number", "string"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.error": {
+      "description": "Either direction. The frame named in replyTo could not be handled.",
+      "properties": {
+        "type": { "const": "error" },
+        "payload": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "enum": ["bad_message", "unsupported_protocol", "unknown_entity", "not_allowed", "unavailable", "internal"] },
+            "message": { "type": "string", "maxLength": 300 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "TileKind": { "enum": ["light", "lock", "climate", "computer", "media", "sensor", "switch", "cover"] },
+    "Home": {
+      "type": "object",
+      "required": ["summary", "tiles"],
+      "properties": {
+        "summary": { "type": "string", "maxLength": 120 },
+        "tiles": {
+          "type": "array",
+          "maxItems": 24,
+          "items": {
+            "type": "object",
+            "required": ["entityId", "kind", "title", "state", "active"],
+            "properties": {
+              "entityId": { "type": "string", "minLength": 1, "maxLength": 255 },
+              "kind": { "$ref": "#/$defs/TileKind" },
+              "title": { "type": "string", "maxLength": 60 },
+              "state": { "type": "string", "maxLength": 60 },
+              "active": { "type": "boolean" },
+              "alert": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Weather": {
+      "type": "object",
+      "required": ["temperatureC", "condition"],
+      "properties": {
+        "temperatureC": { "type": "number" },
+        "condition": { "type": "string", "maxLength": 60 },
+        "summary": { "type": "string", "maxLength": 120 }
+      },
+      "additionalProperties": false
+    },
+    "Event": {
+      "type": "object",
+      "required": ["title", "start"],
+      "properties": {
+        "title": { "type": "string", "maxLength": 120 },
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "note": { "type": "string", "maxLength": 160 }
+      },
+      "additionalProperties": false
+    },
+    "NowPlaying": {
+      "type": "object",
+      "required": ["source", "title", "playing"],
+      "properties": {
+        "source": { "type": "string", "maxLength": 80 },
+        "title": { "type": "string", "maxLength": 120 },
+        "subtitle": { "type": "string", "maxLength": 120 },
+        "playing": { "type": "boolean" },
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

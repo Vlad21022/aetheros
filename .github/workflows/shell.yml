@@ -1,0 +1,35 @@
+name: shell
+
+on:
+  push:
+    branches: [main]
+    paths: ["shell/**", "design/**", "tools/**", "contracts/**", ".github/workflows/shell.yml"]
+  pull_request:
+    paths: ["shell/**", "design/**", "tools/**", "contracts/**", ".github/workflows/shell.yml"]
+
+jobs:
+  tokens:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generated tokens match design/tokens.json
+        run: python3 tools/gen_tokens.py --check
+
+  flutter:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        package: [shell/packages/aether_design, shell/app]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.27.4
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test

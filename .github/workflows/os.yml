@@ -1,0 +1,68 @@
+name: os
+
+on:
+  push:
+    branches: [main]
+    paths: ["os/**", ".github/workflows/os.yml"]
+  pull_request:
+    paths: ["os/**", ".github/workflows/os.yml"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: os
+
+jobs:
+  x86_64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      BR2_DL_DIR: ${{ github.workspace }}/os/.cache/dl
+      BR2_CCACHE_DIR: ${{ github.workspace }}/os/.cache/ccache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so post-build can `git describe`
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bzip2 cpio file git gzip libncurses-dev \
+            patch perl python3 rsync sed tar unzip wget qemu-system-x86
+
+      - name: Enable KVM for faster QEMU boots
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: os/.cache/dl
+          key: dl-${{ hashFiles('os/configs/**', 'os/Makefile') }}
+          restore-keys: dl-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: os/.cache/ccache
+          key: ccache-${{ github.sha }}
+          restore-keys: ccache-
+
+      - name: Build image
+        run: make build
+
+      - name: Boot smoke test
+        run: make smoke
+
+      - name: Upload image
+        uses: actions/upload-artifact@v4
+        with:
+          name: aetheros-x86_64
+          path: |
+            os/output/x86_64/images/bzImage
+            os/output/x86_64/images/rootfs.ext2
+          retention-days: 14

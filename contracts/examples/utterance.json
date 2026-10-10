@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "utterance",
+  "id": "s2",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "text": "Stinge tot, mă duc la culcare.",
+    "source": "voice",
+    "locale": "ro-RO"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "v": 1,
+  "type": "hello",
+  "id": "s1",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "screenId": "kitchen-frame",
+    "name": "Bucătărie",
+    "room": "Bucătărie",
+    "protocol": 1,
+    "locale": "ro-RO",
+    "capabilities": {
+      "touch": true,
+      "microphone": true,
+      "speaker": false,
+      "presence": true
+    },
+    "size": {
+      "width": 1280,
+      "height": 800
+    }
+  }
+}
