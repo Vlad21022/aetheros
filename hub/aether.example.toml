@@ -1,0 +1,21 @@
+# Copy to hub/aether.toml (never committed) and list your own entities.
+# Used only when AETHER_HA_URL is set.
+
+[home]
+# The tiles of the "Acasă" widget, in order; the screen shows the first four.
+# One Home Assistant entity per tile. For "Lumini", use a light group: the tile
+# then counts how many of its lights are on.
+# title is optional (default: the entity's name in Home Assistant).
+# kind is optional (default: from the entity's domain): light, lock, climate,
+# computer, media, sensor, switch, cover.
+tiles = [
+  { entity = "light.living_room", title = "Lumini" },
+  { entity = "lock.front_door", title = "Ușa" },
+  { entity = "sensor.living_room_temperature", title = "Sufragerie", kind = "climate" },
+]
+
+[sections]
+# Each one is optional; leave it out and the widget is not shown.
+weather = "weather.home"
+now_playing = "media_player.living_room"
+calendar = "calendar.personal"

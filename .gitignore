@@ -24,3 +24,7 @@ pubspec_overrides.yaml
 
 # Lockfiles are committed for apps, not for library packages
 /shell/packages/*/pubspec.lock
+
+# Hub settings: secrets and the entities of one home
+/hub/.env
+/hub/aether.toml
