@@ -4,7 +4,7 @@ import pytest
 
 from aether_hub import protocol as p
 from aether_hub.ha_client import HaError, HaUnavailable
-from aether_hub.tier0 import REFUSED, RULES, SENT, Tier0Error, Tier0Router
+from aether_hub.tier0 import REFUSED, RULES, SENT, Tier0Error, Tier0Router, tap_action
 
 ENTITIES = ["light.office", "switch.plug", "media_player.tv", "lock.front_door", "cover.garage", "climate.living"]
 
@@ -34,6 +34,8 @@ def control(entity_id: str, action: str, value=None) -> p.ControlPayload:
         ("switch.plug", "turn_on", "turn_on"),
         ("switch.plug", "turn_off", "turn_off"),
         ("media_player.tv", "toggle", "media_play_pause"),
+        ("media_player.tv", "next", "media_next_track"),
+        ("media_player.tv", "previous", "media_previous_track"),
         ("lock.front_door", "turn_on", "lock"),
     ],
 )
@@ -53,6 +55,8 @@ def test_every_rule_is_tested():
         ("switch", "turn_on"),
         ("switch", "turn_off"),
         ("media_player", "toggle"),
+        ("media_player", "next"),
+        ("media_player", "previous"),
         ("lock", "turn_on"),
     }
     assert set(RULES) == tested, "a new tier 0 rule needs a case in test_allowed_controls_call_the_service"
@@ -73,6 +77,7 @@ async def test_a_tap_never_unlocks_a_door(action):
         ("cover.garage", "toggle"),
         ("climate.living", "set"),
         ("light.office", "set"),
+        ("light.office", "next"),
         ("media_player.tv", "turn_off"),
     ],
 )
@@ -103,3 +108,24 @@ async def test_a_refused_service_is_reported_not_raised():
     router = Tier0Router(ENTITIES, Home(fails_with=HaError("Service failed")))
     result = await router.control(control("light.office", "toggle"))
     assert (result.ok, result.message) == (False, REFUSED)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "state", "action"),
+    [
+        ("light.office", "on", "toggle"),
+        ("light.office", "off", "toggle"),
+        ("switch.plug", "on", "toggle"),
+        ("lock.front_door", "unlocked", "turn_on"),
+        ("lock.front_door", "locked", None),
+        ("lock.front_door", "jammed", None),
+        ("sensor.temperature", "21.5", None),
+        ("climate.living", "heat", None),
+        ("cover.garage", "closed", None),
+        ("media_player.tv", "playing", None),
+    ],
+)
+def test_what_a_tap_on_a_tile_sends(entity_id, state, action):
+    assert tap_action(entity_id, state) == action
+    if action is not None:
+        assert (entity_id.partition(".")[0], action) in RULES, "a tile must not offer what tier 0 refuses"

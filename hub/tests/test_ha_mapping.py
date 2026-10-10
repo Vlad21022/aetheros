@@ -208,3 +208,37 @@ def test_missing_fields_are_left_out_on_the_wire():
     wire = m.p.dump(m.p.new(m.p.StateSnapshot, m.snapshot(entities, found)))
     assert "null" not in wire
     assert "weather" not in wire
+
+
+def test_tiles_say_what_a_tap_sends():
+    assert one(EntityState("light.office", "on")).tap == "toggle"
+    assert one(EntityState("switch.plug", "off")).tap == "toggle"
+    assert one(EntityState("lock.front_door", "unlocked")).tap == "turn_on"
+    assert one(EntityState("lock.front_door", "locked")).tap is None
+    assert one(EntityState("sensor.t", "21.5", {"unit_of_measurement": "°C"})).tap is None
+
+
+def test_a_tile_that_does_not_answer_cannot_be_tapped():
+    assert one(EntityState("light.office", "unavailable")).tap is None
+    assert m.tile(TileConfig(entity="light.ghost"), {}).tap is None
+    assert "tap" not in m.p.dump(
+        m.p.new(m.p.StateUpdate, m.p.UpdatePayload(section="home", value=m.home(Entities(), {})))
+    )
+
+
+@pytest.mark.parametrize(
+    ("features", "controls"),
+    [
+        (16384 | 1 | 16 | 32, ["previous", "toggle", "next"]),
+        (16384 | 1, ["toggle"]),
+        (16384, None),
+        (32, ["next"]),
+        (0, None),
+        (None, None),
+    ],
+)
+def test_now_playing_offers_only_what_the_player_supports(features, controls):
+    attributes = {"media_title": "Film", "supported_features": features}
+    playing = m.now_playing("media_player.tv", states(EntityState("media_player.tv", "playing", attributes)))
+    assert playing.entityId == "media_player.tv"
+    assert playing.controls == controls

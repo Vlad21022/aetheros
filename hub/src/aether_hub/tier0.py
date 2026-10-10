@@ -25,9 +25,22 @@ RULES: dict[tuple[str, str], str] = {
     ("switch", "turn_on"): "turn_on",
     ("switch", "turn_off"): "turn_off",
     ("media_player", "toggle"): "media_play_pause",
+    ("media_player", "next"): "media_next_track",
+    ("media_player", "previous"): "media_previous_track",
     # Locking is always safe. Unlocking a door is consequential: not from a tap.
     ("lock", "turn_on"): "lock",
 }
+
+
+def tap_action(entity_id: str, state: str) -> p.TapAction | None:
+    """What a tap on this entity's tile sends, given its state. None: the tile is not a button."""
+    match entity_id.partition(".")[0]:
+        case "light" | "switch":
+            return "toggle"
+        case "lock" if state == "unlocked":
+            return "turn_on"
+    return None
+
 
 SENT = "Comanda a fost trimisă."
 REFUSED = "Nu a mers. Home Assistant a refuzat comanda."
