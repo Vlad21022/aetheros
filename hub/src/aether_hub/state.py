@@ -1,22 +1,46 @@
 """Where the ambient screen's data comes from.
 
-Phase 0 serves fixed demo data so the screen can be built against a real hub.
-Phase 1 replaces it with a Home Assistant source behind the same interface.
+`DemoState` serves fixed demo data, for tests and for running without Home
+Assistant. `HomeAssistantState` (ha_state.py) is the real source behind the same
+interface.
 """
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
 from . import protocol as p
 
+Change = p.UpdatePayload | p.SnapshotPayload
+"""One changed section, or everything again (after the source reconnects)."""
+
+_SECTIONS = ("home", "weather", "nextEvent", "nowPlaying")
+
 
 class StateSource(Protocol):
     async def snapshot(self) -> p.SnapshotPayload: ...
 
+    def updates(self) -> AsyncIterator[Change]:
+        """Changes since the last snapshot, as they happen. One consumer: the hub."""
+        ...
+
+
+def changed_sections(old: p.SnapshotPayload, new: p.SnapshotPayload) -> list[p.UpdatePayload]:
+    """A state.update payload for each section that differs between two snapshots."""
+    return [
+        p.UpdatePayload(section=section, value=getattr(new, section))
+        for section in _SECTIONS
+        if getattr(old, section) != getattr(new, section)
+    ]
+
 
 class DemoState:
+    def __init__(self) -> None:
+        self._changes: asyncio.Queue[Change] = asyncio.Queue()
+
     async def snapshot(self) -> p.SnapshotPayload:
         now = datetime.now(UTC).replace(second=0, microsecond=0)
         return p.SnapshotPayload(
@@ -49,6 +73,6 @@ class DemoState:
             ),
         )
 
-
-def demo_state() -> StateSource:
-    return DemoState()
+    async def updates(self) -> AsyncIterator[Change]:
+        while True:
+            yield await self._changes.get()

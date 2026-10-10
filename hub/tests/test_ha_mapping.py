@@ -197,3 +197,14 @@ def test_snapshot_puts_the_sections_together():
     assert snapshot.weather.condition == "Ploaie"
     assert snapshot.nextEvent is None and snapshot.nowPlaying is None
     assert snapshot.home.tiles == []
+
+
+def test_missing_fields_are_left_out_on_the_wire():
+    entities = Entities(sections=SectionsConfig(calendar="calendar.c", now_playing="media_player.tv"))
+    found = states(
+        EntityState("calendar.c", "off", {"message": "Dentist", "start_time": "2026-10-10 18:30:00"}),
+        EntityState("media_player.tv", "playing", {"media_title": "Film"}),
+    )
+    wire = m.p.dump(m.p.new(m.p.StateSnapshot, m.snapshot(entities, found)))
+    assert "null" not in wire
+    assert "weather" not in wire

@@ -169,10 +169,12 @@ def next_event(entity_id: str | None, states: States) -> p.Event | None:
         return None
     location = entity.attributes.get("location")
     return p.Event(
-        title=str(title)[:120],
-        start=start,
-        end=_time(entity.attributes.get("end_time")),
-        note=str(location)[:160] if location else None,
+        **_present(
+            title=str(title)[:120],
+            start=start,
+            end=_time(entity.attributes.get("end_time")),
+            note=str(location)[:160] if location else None,
+        )
     )
 
 
@@ -188,22 +190,31 @@ def now_playing(entity_id: str | None, states: States) -> p.NowPlaying | None:
     position, duration = _float(attributes.get("media_position")), _float(attributes.get("media_duration"))
     progress = min(max(position / duration, 0.0), 1.0) if position is not None and duration else None
     return p.NowPlaying(
-        source=entity.name[:80],
-        title=str(title)[:120],
-        subtitle=str(subtitle)[:120] if subtitle else None,
-        playing=entity.state == "playing",
-        progress=progress,
+        **_present(
+            source=entity.name[:80],
+            title=str(title)[:120],
+            subtitle=str(subtitle)[:120] if subtitle else None,
+            playing=entity.state == "playing",
+            progress=progress,
+        )
     )
 
 
 def snapshot(entities: Entities, states: States, *, connected: bool = True) -> p.SnapshotPayload:
     sections = entities.sections
     return p.SnapshotPayload(
-        home=home(entities, states, connected=connected),
-        weather=weather(sections.weather, states),
-        nextEvent=next_event(sections.calendar, states),
-        nowPlaying=now_playing(sections.now_playing, states),
+        **_present(
+            home=home(entities, states, connected=connected),
+            weather=weather(sections.weather, states),
+            nextEvent=next_event(sections.calendar, states),
+            nowPlaying=now_playing(sections.now_playing, states),
+        )
     )
+
+
+def _present(**fields: Any) -> dict[str, Any]:
+    """Drops what is missing: on the wire an absent field is left out, not sent as null."""
+    return {name: value for name, value in fields.items() if value is not None}
 
 
 def _kind(domain: str, entity: EntityState | None) -> p.TileKind:

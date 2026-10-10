@@ -1,12 +1,13 @@
 """WebSocket endpoint that screens connect to (ws://<hub>:8765/v1).
 
-Phase 0: the handshake, the snapshot and the error rules from contracts/README.md.
-Home Assistant (phase 1) and the agent (phase 3) plug in behind `Hub`.
+The handshake, the snapshot, live state updates and the error rules from
+contracts/README.md. The agent (phase 3) plugs in behind `Hub`.
 """
 
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 
 from pydantic import ValidationError
@@ -14,7 +15,7 @@ from websockets.asyncio.server import ServerConnection, serve
 from websockets.exceptions import ConnectionClosed
 
 from . import protocol as p
-from .state import StateSource, demo_state
+from .state import DemoState, StateSource
 
 log = logging.getLogger("aether_hub")
 
@@ -90,6 +91,17 @@ class Hub:
                 del self.screens[screen_id]
                 log.info("screen %s disconnected", screen_id)
 
+    async def broadcast(self) -> None:
+        """Sends every change of the state source to all connected screens. Runs until cancelled."""
+        async for change in self.state.updates():
+            if isinstance(change, p.SnapshotPayload):
+                msg = p.new(p.StateSnapshot, change)
+            else:
+                msg = p.new(p.StateUpdate, change)
+            for ws in list(self.screens.values()):
+                with contextlib.suppress(ConnectionClosed):
+                    await self._send(ws, msg)
+
     async def _on_utterance(self, ws: ServerConnection, msg: p.Utterance) -> None:
         await self._send(ws, p.new(p.AgentStatus, p.AgentStatusPayload(state="thinking", tier=0), reply_to=msg.id))
         await self._send(
@@ -113,7 +125,7 @@ def _short(exc: ValidationError) -> str:
 
 
 async def run(host: str = "0.0.0.0", port: int = 8765) -> None:
-    hub = Hub(demo_state())
+    hub = Hub(DemoState())
     async with serve(hub.handle, host, port) as server:
         log.info("listening on ws://%s:%d%s", host, port, PATH)
         await server.serve_forever()
