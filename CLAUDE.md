@@ -76,7 +76,8 @@ The platform folders are not committed yet. Once, in `shell/app`:
 - `hub/src/aether_hub/` `protocol.py` (typed messages), `server.py` (WebSocket, broadcast, wiring),
   `config.py` (env, `.env`, `aether.toml`), `state.py` (`StateSource`, demo home), `ha_client.py`,
   `ha_mapping.py`, `ha_state.py` (Home Assistant), `tier0.py` (rules for `control`)
-- `shell/app/lib/` `main.dart`, `src/protocol.dart`, `src/hub_connection.dart` (Riverpod providers), `src/ambient_screen.dart`
+- `shell/app/lib/` `main.dart`, `src/protocol.dart`, `src/hub_connection.dart` (`hubProvider`, `snapshotProvider`),
+  `src/controls.dart` (sending `control`, pending and failures), `src/format.dart`, `src/ambient_screen.dart`
 - `shell/packages/aether_design/` theme, motion, generated tokens
 - `os/` Buildroot BR2_EXTERNAL tree; see `os/README.md`
 - Design references (owner's claude.ai account): design system
@@ -89,8 +90,9 @@ Phases 0 and 1 are done on the hub: `HomeAssistantState` behind `StateSource`, a
 handling of `control` (`hub/README.md` has the setup and the allowlist). The tests use a
 stand-in Home Assistant (`hub/tests/fake_ha.py`); it was also checked by hand against a
 development Home Assistant in Docker with the `demo` integration.
-Next is phase 2: the screen sends `control` when a tile is tapped and applies
-`action.result` and `error`. Keep the demo source for tests and for running without
+Phase 2 is done for controls: the hub marks what is tappable (`tap` on tiles, `controls`
+on now playing), the screen sends `control` and shows failures in the home card
+(`shell/app/lib/src/controls.dart`). Next is phase 3, the agent (tier 1). Keep the demo source for tests and for running without
 Home Assistant. The Home Assistant token lives in `hub/.env`, never in the repo.
 
 ## Working style
