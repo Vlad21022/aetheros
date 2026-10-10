@@ -2,7 +2,8 @@
 
 AetherOS is a local-first home assistant: a **hub** (Python) runs the agent, the
 models and the plugins; **screens** (Flutter) show the home and talk to the hub over
-a WebSocket protocol. Read `README.md` for the map and `docs/decisions.md` before
+a WebSocket protocol. Read `README.md` for the map, `docs/vision.md` for the product
+context (why, scope, hardware, open questions) and `docs/decisions.md` before
 changing anything architectural. The owner wants a genuinely engineered product:
 design first, typed contracts, tests and CI from day one. No vibe-coding.
 
