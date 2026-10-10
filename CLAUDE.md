@@ -86,8 +86,9 @@ The platform folders are not committed yet. Once, in `shell/app`:
 ## Current phase
 
 Phases 0 and 1 are done on the hub: `HomeAssistantState` behind `StateSource`, and tier 0
-handling of `control` (`hub/README.md` has the setup and the allowlist). It is tested
-against a stand-in Home Assistant (`hub/tests/fake_ha.py`), not yet against a real one.
+handling of `control` (`hub/README.md` has the setup and the allowlist). The tests use a
+stand-in Home Assistant (`hub/tests/fake_ha.py`); it was also checked by hand against a
+development Home Assistant in Docker with the `demo` integration.
 Next is phase 2: the screen sends `control` when a tile is tapped and applies
 `action.result` and `error`. Keep the demo source for tests and for running without
 Home Assistant. The Home Assistant token lives in `hub/.env`, never in the repo.
