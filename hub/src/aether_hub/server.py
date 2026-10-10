@@ -14,8 +14,13 @@ from pydantic import ValidationError
 from websockets.asyncio.server import ServerConnection, serve
 from websockets.exceptions import ConnectionClosed
 
+from . import config
 from . import protocol as p
+from .config import Settings
+from .ha_client import HaClient
+from .ha_state import HomeAssistantState
 from .state import DemoState, StateSource
+from .tier0 import Tier0Error, Tier0Router
 
 log = logging.getLogger("aether_hub")
 
@@ -23,8 +28,9 @@ PATH = "/v1"
 
 
 class Hub:
-    def __init__(self, state: StateSource, name: str = "AetherOS Hub") -> None:
+    def __init__(self, state: StateSource, router: Tier0Router, name: str = "AetherOS Hub") -> None:
         self.state = state
+        self.router = router
         self.name = name
         self.screens: dict[str, ServerConnection] = {}
 
@@ -63,14 +69,7 @@ class Hub:
                     case p.Utterance():
                         await self._on_utterance(ws, msg)
                     case p.Control():
-                        await self._send(
-                            ws,
-                            p.new(
-                                p.Error,
-                                p.ErrorPayload(code="unavailable", message="Home control arrives in phase 1."),
-                                reply_to=msg.id,
-                            ),
-                        )
+                        await self._on_control(ws, msg)
                     case p.Presence() | p.ConfirmResponse():
                         log.info("%s from %s", msg.type, screen_id)
                     case _:
@@ -102,6 +101,15 @@ class Hub:
                 with contextlib.suppress(ConnectionClosed):
                     await self._send(ws, msg)
 
+    async def _on_control(self, ws: ServerConnection, msg: p.Control) -> None:
+        """Tier 0. The new state reaches the screens as a state.update, not in this reply."""
+        try:
+            result = await self.router.control(msg.payload)
+        except Tier0Error as exc:
+            await self._send(ws, p.new(p.Error, p.ErrorPayload(code=exc.code, message=str(exc)), reply_to=msg.id))
+        else:
+            await self._send(ws, p.new(p.ActionResult, result, reply_to=msg.id))
+
     async def _on_utterance(self, ws: ServerConnection, msg: p.Utterance) -> None:
         await self._send(ws, p.new(p.AgentStatus, p.AgentStatusPayload(state="thinking", tier=0), reply_to=msg.id))
         await self._send(
@@ -124,13 +132,43 @@ def _short(exc: ValidationError) -> str:
     return f"{where}: {first['msg']}"[:300]
 
 
-async def run(host: str = "0.0.0.0", port: int = 8765) -> None:
-    hub = Hub(DemoState())
-    async with serve(hub.handle, host, port) as server:
+def build(settings: Settings) -> tuple[Hub, HaClient | None]:
+    """Wires the hub to Home Assistant, or to the demo home when none is configured."""
+    if settings.home_assistant is None:
+        demo = DemoState()
+        return Hub(demo, Tier0Router(demo.entities, demo)), None
+
+    entities = settings.entities
+    source = HomeAssistantState(entities)
+    client = HaClient(
+        settings.home_assistant.url,
+        settings.home_assistant.token.get_secret_value(),
+        on_connected=source.connected,
+        on_state_changed=source.state_changed,
+        on_disconnected=source.disconnected,
+    )
+    controllable = [tile.entity for tile in entities.home.tiles]
+    if entities.sections.now_playing:
+        controllable.append(entities.sections.now_playing)
+    return Hub(source, Tier0Router(controllable, client)), client
+
+
+async def run(settings: Settings, host: str = "0.0.0.0", port: int = 8765) -> None:
+    hub, client = build(settings)
+    async with serve(hub.handle, host, port), asyncio.TaskGroup() as tasks:
         log.info("listening on ws://%s:%d%s", host, port, PATH)
-        await server.serve_forever()
+        if client is None:
+            log.info("no Home Assistant configured: serving demo data")
+        else:
+            tasks.create_task(client.run())
+        await hub.broadcast()
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    asyncio.run(run())
+    try:
+        settings = config.load()
+    except config.ConfigError as exc:
+        raise SystemExit(f"aether-hub: {exc}") from None
+    with contextlib.suppress(KeyboardInterrupt):
+        asyncio.run(run(settings))

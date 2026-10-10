@@ -38,17 +38,56 @@ def changed_sections(old: p.SnapshotPayload, new: p.SnapshotPayload) -> list[p.U
 
 
 class DemoState:
+    """A made-up home that also reacts to tier 0 service calls, in memory."""
+
+    LIGHTS = "light.group_on"
+    LOCK = "lock.front_door"
+    PLAYER = "media_player.living_room"
+    entities = (LIGHTS, LOCK, "sensor.living_room_temperature", "aether.pc_office", PLAYER)
+
     def __init__(self) -> None:
+        self._lights_on = True
+        self._locked = True
+        self._playing = False
         self._changes: asyncio.Queue[Change] = asyncio.Queue()
 
     async def snapshot(self) -> p.SnapshotPayload:
+        return self._build()
+
+    async def call_service(self, domain: str, service: str, entity_id: str) -> None:
+        old = self._build()
+        match entity_id, service:
+            case self.LIGHTS, "toggle":
+                self._lights_on = not self._lights_on
+            case self.LIGHTS, "turn_on" | "turn_off":
+                self._lights_on = service == "turn_on"
+            case self.LOCK, "lock":
+                self._locked = True
+            case self.PLAYER, "media_play_pause":
+                self._playing = not self._playing
+        for update in changed_sections(old, self._build()):
+            self._changes.put_nowait(update)
+
+    def _build(self) -> p.SnapshotPayload:
         now = datetime.now(UTC).replace(second=0, microsecond=0)
         return p.SnapshotPayload(
             home=p.Home(
                 summary="Totul e în regulă",
                 tiles=[
-                    p.Tile(entityId="light.group_on", kind="light", title="Lumini", state="3 aprinse", active=True),
-                    p.Tile(entityId="lock.front_door", kind="lock", title="Ușa", state="Încuiată", active=True),
+                    p.Tile(
+                        entityId=self.LIGHTS,
+                        kind="light",
+                        title="Lumini",
+                        state="3 aprinse" if self._lights_on else "Stinse",
+                        active=self._lights_on,
+                    ),
+                    p.Tile(
+                        entityId=self.LOCK,
+                        kind="lock",
+                        title="Ușa",
+                        state="Încuiată" if self._locked else "Descuiată",
+                        active=self._locked,
+                    ),
                     p.Tile(
                         entityId="sensor.living_room_temperature",
                         kind="climate",
@@ -69,7 +108,7 @@ class DemoState:
                 note="Demo: datele reale vin din calendar în faza 1.",
             ),
             nowPlaying=p.NowPlaying(
-                source="HomePod sufragerie", title="Seară", subtitle="Playlist", playing=False, progress=0.38
+                source="HomePod sufragerie", title="Seară", subtitle="Playlist", playing=self._playing, progress=0.38
             ),
         )
 

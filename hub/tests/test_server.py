@@ -5,15 +5,16 @@ import contextlib
 import json
 
 import pytest
+from fake_ha import TOKEN
 from jsonschema import Draft202012Validator, FormatChecker
 from test_contract import SCHEMA
 from websockets.asyncio.client import connect
 from websockets.asyncio.server import serve
 
-from aether_hub.config import Entities
+from aether_hub.config import Entities, HomeAssistantConfig, Settings
 from aether_hub.ha_state import HomeAssistantState
-from aether_hub.server import Hub
-from aether_hub.state import DemoState
+from aether_hub.server import Hub, build
+from aether_hub.tier0 import Tier0Router
 
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
 
@@ -62,7 +63,7 @@ async def join(url: str, screen_id: str = "test-screen"):
 
 @pytest.fixture
 async def url():
-    async with serving(Hub(DemoState())) as url:
+    async with serving(build(Settings())[0]) as url:
         yield url
 
 
@@ -117,7 +118,7 @@ HA_STATES = [
 async def test_state_changes_reach_every_screen():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source)) as url:
+    async with serving(Hub(source, Tier0Router([], None))) as url:
         kitchen, snapshot = await join(url, "kitchen")
         office, _ = await join(url, "office")
         async with kitchen, office:
@@ -137,7 +138,7 @@ async def test_state_changes_reach_every_screen():
 async def test_losing_home_assistant_sends_a_new_snapshot():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source)) as url:
+    async with serving(Hub(source, Tier0Router([], None))) as url:
         ws, _ = await join(url)
         async with ws:
             source.disconnected()
@@ -152,7 +153,7 @@ async def test_losing_home_assistant_sends_a_new_snapshot():
 async def test_a_screen_that_left_does_not_stop_the_broadcast():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source)) as url:
+    async with serving(Hub(source, Tier0Router([], None))) as url:
         gone, _ = await join(url, "gone")
         stays, _ = await join(url, "stays")
         await gone.close()
@@ -164,3 +165,148 @@ async def test_a_screen_that_left_does_not_stop_the_broadcast():
             while update["type"] != "state.update":
                 update = await receive(stays)
             assert update["payload"]["value"]["tiles"][0]["active"] is True
+
+
+def control(entity_id: str, action: str = "toggle", message_id: str = "s9") -> str:
+    return json.dumps(
+        {**HELLO, "type": "control", "id": message_id, "payload": {"entityId": entity_id, "action": action}}
+    )
+
+
+async def next_of(ws, kind: str):
+    msg = await receive(ws)
+    while msg["type"] != kind:
+        msg = await receive(ws)
+    return msg
+
+
+async def test_demo_home_answers_a_control(url):
+    kitchen, snapshot = await join(url, "kitchen")
+    office, _ = await join(url, "office")
+    async with kitchen, office:
+        assert snapshot["payload"]["home"]["tiles"][0]["state"] == "3 aprinse"
+        await kitchen.send(control("light.group_on"))
+        result = await next_of(kitchen, "action.result")
+        assert result["replyTo"] == "s9" and result["payload"]["ok"] is True
+        for ws in (kitchen, office):
+            update = await next_of(ws, "state.update")
+            assert update["payload"]["value"]["tiles"][0] == {
+                "entityId": "light.group_on",
+                "kind": "light",
+                "title": "Lumini",
+                "state": "Stinse",
+                "active": False,
+            }
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "action", "code"),
+    [
+        ("light.nowhere", "toggle", "unknown_entity"),
+        ("lock.front_door", "toggle", "not_allowed"),
+        ("aether.pc_office", "turn_off", "not_allowed"),
+        ("sensor.living_room_temperature", "set", "not_allowed"),
+    ],
+)
+async def test_controls_that_are_refused(url, entity_id, action, code):
+    ws, _ = await join(url)
+    async with ws:
+        await ws.send(control(entity_id, action))
+        error = await receive(ws)
+        assert (error["type"], error["replyTo"], error["payload"]["code"]) == ("error", "s9", code)
+
+
+@pytest.fixture
+async def ha_hub(fake_ha, tmp_path):
+    """A hub wired to the stand-in Home Assistant, the way `run` wires it."""
+    await fake_ha.set_state("light.office", "off", {"friendly_name": "Birou"})
+    await fake_ha.set_state("lock.front_door", "locked")
+    await fake_ha.set_state("media_player.tv", "playing", {"media_title": "Film", "friendly_name": "TV"})
+    settings = Settings(
+        home_assistant=HomeAssistantConfig(url=fake_ha.url, token=TOKEN),
+        entities=Entities.model_validate(
+            {
+                "home": {"tiles": [{"entity": "light.office"}, {"entity": "lock.front_door"}]},
+                "sections": {"now_playing": "media_player.tv"},
+            }
+        ),
+    )
+    hub, client = build(settings)
+    client._retry_delays = (0.01,)
+    connected = asyncio.Event()
+    on_connected = client._on_connected
+    client._on_connected = lambda states: (on_connected(states), connected.set())
+    task = asyncio.create_task(client.run())
+    async with serving(hub) as url:
+        async with asyncio.timeout(2):
+            await connected.wait()
+        yield url
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+
+
+async def test_control_reaches_home_assistant_and_comes_back_as_state(ha_hub, fake_ha):
+    ws, snapshot = await join(ha_hub)
+    async with ws:
+        assert snapshot["payload"]["home"]["tiles"][0] == {
+            "entityId": "light.office",
+            "kind": "light",
+            "title": "Birou",
+            "state": "Stinsă",
+            "active": False,
+        }
+        await ws.send(control("light.office", "turn_on"))
+        assert (await next_of(ws, "action.result"))["payload"]["ok"] is True
+        assert fake_ha.calls == [("light", "turn_on", "light.office")]
+        update = await next_of(ws, "state.update")
+        assert update["payload"]["value"]["tiles"][0]["state"] == "Aprinsă"
+
+
+async def test_play_pause_goes_through_the_now_playing_entity(ha_hub, fake_ha):
+    ws, snapshot = await join(ha_hub)
+    async with ws:
+        assert snapshot["payload"]["nowPlaying"]["playing"] is True
+        await ws.send(control("media_player.tv"))
+        await next_of(ws, "action.result")
+        assert fake_ha.calls == [("media_player", "media_play_pause", "media_player.tv")]
+        update = await next_of(ws, "state.update")
+        assert (update["payload"]["section"], update["payload"]["value"]["playing"]) == ("nowPlaying", False)
+
+
+async def test_unlock_is_refused_before_it_reaches_home_assistant(ha_hub, fake_ha):
+    ws, _ = await join(ha_hub)
+    async with ws:
+        await ws.send(control("lock.front_door", "turn_off"))
+        assert (await receive(ws))["payload"]["code"] == "not_allowed"
+        assert fake_ha.calls == []
+
+
+async def test_a_change_made_in_home_assistant_reaches_the_screen(ha_hub, fake_ha):
+    ws, _ = await join(ha_hub)
+    async with ws:
+        await fake_ha.set_state("light.office", "on")
+        update = await next_of(ws, "state.update")
+        assert update["payload"]["value"]["tiles"][0]["active"] is True
+
+
+async def test_a_service_home_assistant_refuses_is_reported(ha_hub, fake_ha):
+    fake_ha.fail_services = True
+    ws, _ = await join(ha_hub)
+    async with ws:
+        await ws.send(control("light.office"))
+        result = await next_of(ws, "action.result")
+        assert result["payload"] == {"ok": False, "message": "Nu a mers. Home Assistant a refuzat comanda."}
+
+
+async def test_home_assistant_going_away_is_said_out_loud(ha_hub, fake_ha):
+    ws, _ = await join(ha_hub)
+    async with ws:
+        await fake_ha.stop()
+        await fake_ha.drop_connections()
+        snapshot = await next_of(ws, "state.snapshot")
+        assert snapshot["payload"]["home"]["summary"] == "Home Assistant nu răspunde"
+        assert "nowPlaying" not in snapshot["payload"]
+        await ws.send(control("light.office"))
+        error = await next_of(ws, "error")
+        assert error["payload"]["code"] == "unavailable"
