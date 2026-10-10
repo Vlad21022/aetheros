@@ -40,7 +40,7 @@ design first, typed contracts, tests and CI from day one. No vibe-coding.
 ```sh
 # hub (Python 3.12+, uv)
 cd hub && uv sync
-uv run aether-hub                 # ws://127.0.0.1:8765/v1
+uv run aether-hub                 # ws://127.0.0.1:8765/v1; demo home unless hub/.env sets Home Assistant
 uv run pytest -q                  # contract + server tests
 uv run ruff check . && uv run ruff format --check .
 
@@ -73,7 +73,9 @@ The platform folders are not committed yet. Once, in `shell/app`:
 ## Where things are
 
 - `contracts/` protocol v1 (schema, examples, README with the message flow)
-- `hub/src/aether_hub/` `protocol.py` (typed messages), `server.py` (WebSocket), `state.py` (demo data until Home Assistant)
+- `hub/src/aether_hub/` `protocol.py` (typed messages), `server.py` (WebSocket, broadcast, wiring),
+  `config.py` (env, `.env`, `aether.toml`), `state.py` (`StateSource`, demo home), `ha_client.py`,
+  `ha_mapping.py`, `ha_state.py` (Home Assistant), `tier0.py` (rules for `control`)
 - `shell/app/lib/` `main.dart`, `src/protocol.dart`, `src/hub_connection.dart` (Riverpod providers), `src/ambient_screen.dart`
 - `shell/packages/aether_design/` theme, motion, generated tokens
 - `os/` Buildroot BR2_EXTERNAL tree; see `os/README.md`
@@ -83,9 +85,12 @@ The platform folders are not committed yet. Once, in `shell/app`:
 
 ## Current phase
 
-Phase 0 is done (this scaffold). Next is phase 1: a Home Assistant source behind
-`StateSource` in `hub/src/aether_hub/state.py`, and tier 0 handling of `control`
-messages. Keep the demo source for tests and for running without Home Assistant.
+Phases 0 and 1 are done on the hub: `HomeAssistantState` behind `StateSource`, and tier 0
+handling of `control` (`hub/README.md` has the setup and the allowlist). It is tested
+against a stand-in Home Assistant (`hub/tests/fake_ha.py`), not yet against a real one.
+Next is phase 2: the screen sends `control` when a tile is tapped and applies
+`action.result` and `error`. Keep the demo source for tests and for running without
+Home Assistant. The Home Assistant token lives in `hub/.env`, never in the repo.
 
 ## Working style
 

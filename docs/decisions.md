@@ -84,3 +84,27 @@ other platforms use Inter, its closest open alternative.
 Reason: the image (os/) packages a product that must exist first. Phases: contract,
 hub with tier 0, screen on the Mac, agent (tier 1), voice, PC plugin and tier 2,
 tablet screens, then the image, then external actions.
+
+## 017 - State and tier 0 use Home Assistant's WebSocket API; MCP stays for the agent
+Reason: the ambient screen needs changes pushed the moment they happen, and tier 0
+must call a service without a model in the loop. Home Assistant's native WebSocket API
+gives both (state_changed events, call_service); MCP has no subscriptions. This narrows
+013: MCP is how the agent (tier 1 and 2) reaches Home Assistant, from phase 3.
+Revisit if: Home Assistant's MCP server gains state subscriptions.
+
+## 018 - Secrets from the environment or an uncommitted .env; entities in a local TOML
+Reason: the Home Assistant token must never be in the repo. The hub reads AETHER_HA_URL
+and AETHER_HA_TOKEN from the environment, then from hub/.env; the environment wins, so
+the appliance image can inject them from a unit file. Which entities a home shows is not
+secret but is personal, so it lives in hub/aether.toml, also uncommitted; the repo carries
+only the two example files. Without these settings the hub serves demo data.
+Revisit if: screens need per-room layouts (then the entities file grows sections per screen).
+
+## 019 - Tier 0 is an allowlist by domain; unlocking waits for confirmations
+Reason: a tap may only do something reversible, on an entity the hub was configured
+with. The table in hub/src/aether_hub/tier0.py allows lights and switches (on, off,
+toggle), media players (play/pause) and locks (lock only). Unlocking a door, covers and
+thermostats are refused with not_allowed until the confirm.request flow exists (phase 3).
+While Home Assistant is away, controls fail with unavailable and tiles say "Indisponibil":
+the hub never falls back to demo data silently.
+Revisit if: a domain proves safe enough to add (each new rule needs a test).

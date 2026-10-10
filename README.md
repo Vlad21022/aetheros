@@ -18,7 +18,7 @@ Nothing leaves the house to be thought about.
 | Folder | What | Status |
 |---|---|---|
 | `contracts/` | The hub ↔ screen protocol: JSON Schema, examples, rules | v1 defined |
-| `hub/` | Python service screens connect to | Handshake, demo snapshot, tests |
+| `hub/` | Python service screens connect to | Live state from Home Assistant, tier 0 controls, demo home |
 | `shell/app/` | The Flutter screen app | Ambient screen against the hub |
 | `shell/packages/aether_design/` | Design tokens and theme for Flutter | Generated from `design/` |
 | `design/` | `tokens.json` exported from the AetherOS design system | v2, Apple-oriented |
@@ -32,19 +32,21 @@ Needs Python 3.12+ with [uv](https://docs.astral.sh/uv/) and Flutter 3.27+.
 
 ```sh
 # 1. the hub
-cd hub && uv sync && uv run aether-hub          # ws://127.0.0.1:8765/v1
+cd hub && uv sync && uv run aether-hub          # ws://127.0.0.1:8765/v1, demo home
 
 # 2. the screen, in another terminal (first time: see shell/README.md)
 cd shell/app && flutter run -d macos
 ```
 
+To use your own home instead of the demo one, see `hub/README.md`.
+
 Tests: `cd hub && uv run pytest`, `cd shell/app && flutter test`.
 
 ## Roadmap
 
-0. **Foundation**: monorepo, CI, protocol v1, design tokens ← *here*
+0. **Foundation**: monorepo, CI, protocol v1, design tokens
 1. **Hub + tier 0**: Home Assistant connection, direct commands without a model
-2. **Ambient screen on the Mac** with real home data
+2. **Ambient screen on the Mac** with real home data ← *here*
 3. **Agent (tier 1)**: local model, tool calling over MCP, confirmations, action log
 4. **Voice**: wake word, Whisper, Piper
 5. **Desktop PC**: MCP plugin with allowlisted actions, Wake-on-LAN, tier 2 model
