@@ -28,3 +28,6 @@ pubspec_overrides.yaml
 # Hub settings: secrets and the entities of one home
 /hub/.env
 /hub/aether.toml
+
+# Throwaway Home Assistant for development (hub/README.md)
+/hub/ha-dev/
