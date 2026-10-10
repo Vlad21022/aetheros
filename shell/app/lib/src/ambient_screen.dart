@@ -4,6 +4,7 @@ import 'package:aether_design/aether_design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'format.dart';
 import 'hub_connection.dart';
 import 'protocol.dart';
 
@@ -24,25 +25,34 @@ class AmbientScreen extends ConsumerWidget {
           gradient: RadialGradient(
             center: const Alignment(-0.75, -0.85),
             radius: 1.3,
-            colors: [colors.tint.withValues(alpha: 0.20), colors.ground.withValues(alpha: 0)],
+            colors: [colors.tint.withValues(alpha: 0.20), colors.tint.withValues(alpha: 0)],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AetherSpace.space12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _ClockColumn(weather: snapshot.valueOrNull?.weather)),
-              const SizedBox(width: AetherSpace.space12),
-              SizedBox(
-                width: 640,
-                child: snapshot.when(
-                  data: (data) => _Widgets(snapshot: data),
-                  loading: () => const _HubMessage('Se conectează la hub…'),
-                  error: (_, __) => const _HubMessage('Hub-ul nu răspunde. Reîncerc…'),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0.85, 1.1),
+              radius: 1.1,
+              colors: [colors.agent.withValues(alpha: 0.13), colors.agent.withValues(alpha: 0)],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AetherSpace.space12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _ClockColumn(weather: snapshot.valueOrNull?.weather)),
+                const SizedBox(width: AetherSpace.space12),
+                SizedBox(
+                  width: 640,
+                  child: snapshot.when(
+                    data: (data) => _Widgets(snapshot: data),
+                    loading: () => const _HubMessage('Se conectează la hub…'),
+                    error: (_, __) => const _HubMessage('Hub-ul nu răspunde. Reîncerc…'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -60,7 +70,7 @@ class _ClockColumn extends ConsumerWidget {
     final colors = context.aether;
     final text = Theme.of(context).textTheme;
     final now = ref.watch(clockProvider).valueOrNull ?? DateTime.now();
-    final time = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final time = hourMinute(now);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +79,7 @@ class _ClockColumn extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_romanianDate(now), style: text.titleLarge),
+            Text(romanianDate(now), style: text.titleLarge),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
@@ -78,10 +88,18 @@ class _ClockColumn extends ConsumerWidget {
             if (weather != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  '${weather!.temperatureC.round()}° · ${weather!.condition}'
-                  '${weather!.summary == null ? '' : ' · ${weather!.summary}'}',
-                  style: text.bodyLarge!.copyWith(color: colors.labelSecondary),
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_outlined, size: 24, color: colors.labelSecondary),
+                    const SizedBox(width: AetherSpace.space2),
+                    Flexible(
+                      child: Text(
+                        '${weather!.temperatureC.round()}° · ${weather!.condition}'
+                        '${weather!.summary == null ? '' : ' · ${weather!.summary}'}',
+                        style: text.bodyLarge!.copyWith(color: colors.labelSecondary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
@@ -121,23 +139,7 @@ class _Widgets extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (event != null)
-          _Material(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Calendar', style: text.labelSmall),
-                const SizedBox(height: AetherSpace.space2),
-                Text(event.title, style: text.headlineLarge),
-                const SizedBox(height: AetherSpace.space2),
-                Text(
-                  '${_hm(event.start)}${event.end == null ? '' : ' – ${_hm(event.end!)}'}'
-                  '${event.note == null ? '' : ' · ${event.note}'}',
-                  style: text.bodyLarge!.copyWith(color: colors.labelSecondary),
-                ),
-              ],
-            ),
-          ),
+        if (event != null) _EventCard(event: event),
         const SizedBox(height: AetherSpace.space4),
         Expanded(
           child: _Material(
@@ -179,6 +181,17 @@ class _Widgets extends StatelessWidget {
           _Material(
             child: Row(
               children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.fillControl,
+                    borderRadius: BorderRadius.circular(AetherRadius.radiusSm),
+                  ),
+                  child: SizedBox.square(
+                    dimension: 72,
+                    child: Icon(Icons.music_note_outlined, size: 28, color: colors.labelSecondary),
+                  ),
+                ),
+                const SizedBox(width: AetherSpace.space4),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,6 +218,13 @@ class _Widgets extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AetherSpace.space4),
+                IconButton(
+                  onPressed: () {},
+                  iconSize: 28,
+                  color: colors.label,
+                  tooltip: 'Piesa anterioară',
+                  icon: const Icon(Icons.fast_rewind_rounded),
+                ),
                 IconButton.filled(
                   onPressed: () {},
                   iconSize: 28,
@@ -216,11 +236,55 @@ class _Widgets extends StatelessWidget {
                   tooltip: playing.playing ? 'Pauză' : 'Redă',
                   icon: Icon(playing.playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
                 ),
+                IconButton(
+                  onPressed: () {},
+                  iconSize: 28,
+                  color: colors.label,
+                  tooltip: 'Piesa următoare',
+                  icon: const Icon(Icons.fast_forward_rounded),
+                ),
               ],
             ),
           ),
         ],
       ],
+    );
+  }
+}
+
+class _EventCard extends ConsumerWidget {
+  const _EventCard({required this.event});
+
+  final CalendarEvent event;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.aether;
+    final text = Theme.of(context).textTheme;
+    final now = ref.watch(clockProvider).valueOrNull ?? DateTime.now();
+    final countdown = startsIn(now, event.start);
+
+    return _Material(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Calendar', style: text.labelSmall),
+              if (countdown != null) Text(countdown, style: text.labelSmall),
+            ],
+          ),
+          const SizedBox(height: AetherSpace.space2),
+          Text(event.title, style: text.headlineLarge),
+          const SizedBox(height: AetherSpace.space2),
+          Text(
+            '${hourMinute(event.start)}${event.end == null ? '' : ' – ${hourMinute(event.end!)}'}'
+            '${event.note == null ? '' : ' · ${event.note}'}',
+            style: text.bodyLarge!.copyWith(color: colors.labelSecondary),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -360,13 +424,3 @@ class _HubMessage extends StatelessWidget {
     return Center(child: Text(message, style: Theme.of(context).textTheme.bodyLarge));
   }
 }
-
-String _hm(DateTime t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-
-const _weekdays = ['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri', 'Sâmbătă', 'Duminică'];
-const _months = [
-  'ianuarie', 'februarie', 'martie', 'aprilie', 'mai', 'iunie',
-  'iulie', 'august', 'septembrie', 'octombrie', 'noiembrie', 'decembrie',
-];
-
-String _romanianDate(DateTime t) => '${_weekdays[t.weekday - 1]}, ${t.day} ${_months[t.month - 1]}';
