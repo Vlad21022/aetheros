@@ -13,27 +13,27 @@ class AetherColors extends ThemeExtension<AetherColors> {
     required this.separator,
     required this.label,
     required this.labelSecondary,
-    required this.tint,
-    required this.onTint,
-    required this.agent,
-    required this.onState,
-    required this.lightOn,
-    required this.alert,
+    required this.mist,
+    required this.onMist,
+    required this.ember,
+    required this.sage,
+    required this.candle,
+    required this.coral,
   });
 
-  /// The screen behind everything. In Dark it carries a soft wallpaper glow; Light is for bright rooms only.
+  /// The screen behind everything: graphite at night, pale stone by day. The sky gradient for the hour is painted over it.
   final Color ground;
 
-  /// Translucent widget fill over ground, always with a background blur of about 40px. Weather, calendar, home, now playing.
+  /// Translucent widget fill over ground and the sky, always with a 40px background blur.
   final Color material;
 
-  /// Solid sheets that sit above everything: confirmations, settings, an open control. One at a time.
+  /// Solid sheets above everything: confirmations, room controls. One at a time.
   final Color surfaceRaised;
 
-  /// Secondary button fill and icon circles for things that are off.
+  /// Secondary buttons and icon discs for things that are off.
   final Color fillControl;
 
-  /// 1px lines between rows in a grouped list, and widget edges in Dark.
+  /// 1px lines between rows in a list.
   final Color separator;
 
   /// Primary text and the clock, on ground, material and surface-raised.
@@ -42,54 +42,54 @@ class AetherColors extends ThemeExtension<AetherColors> {
   /// Secondary text: dates, units, captions, on ground, material and surface-raised.
   final Color labelSecondary;
 
-  /// Everything you can tap: primary buttons, links, selected controls. White labels on tint are set at 19px semibold or larger.
-  final Color tint;
+  /// Everything you can tap: primary buttons, links, selected controls, sliders. The colour of the upper air the product is named for.
+  final Color mist;
 
-  /// Labels and icons on a tint fill.
-  final Color onTint;
+  /// Labels and icons on a mist fill.
+  final Color onMist;
 
-  /// Aether's presence only: the glow orb while listening or thinking, and the line that names who is speaking. Never on buttons.
-  final Color agent;
+  /// Aether's presence only: the orb, the line that names who is speaking, the agent working in the Now bar. Never on buttons.
+  final Color ember;
 
-  /// A device that is on, locked or healthy, and completed steps. Always paired with a word or a checkmark.
-  final Color onState;
+  /// On, locked, healthy, done. Always with a word or a checkmark.
+  final Color sage;
 
-  /// Icon circle fill for lights that are on, as in Apple Home.
-  final Color lightOn;
+  /// Icon disc fill for lights that are on. Icons on it use ground (dark) or white (light).
+  final Color candle;
 
-  /// Needs a person: a failed action, an unlocked door at night. Always with a word.
-  final Color alert;
+  /// Needs a person: a failed action, a door unlocked at night. Always with a word.
+  final Color coral;
 
   static const AetherColors dark = AetherColors(
-    ground: Color(0xFF0B0C10),
-    material: Color(0x14FFFFFF),
-    surfaceRaised: Color(0xFF2C2C2E),
-    fillControl: Color(0xFF3A3A3C),
-    separator: Color(0xFF38383A),
-    label: Color(0xFFFFFFFF),
-    labelSecondary: Color(0xFF98989F),
-    tint: Color(0xFF0A84FF),
-    onTint: Color(0xFFFFFFFF),
-    agent: Color(0xFFFF9F0A),
-    onState: Color(0xFF30D158),
-    lightOn: Color(0xFFFFD60A),
-    alert: Color(0xFFFF453A),
+    ground: Color(0xFF0F1214),
+    material: Color(0x12F1EFE9),
+    surfaceRaised: Color(0xFF1E2326),
+    fillControl: Color(0xFF2B3135),
+    separator: Color(0xFF343B40),
+    label: Color(0xFFF1EFE9),
+    labelSecondary: Color(0xFF9AA3A6),
+    mist: Color(0xFF9CC7D4),
+    onMist: Color(0xFF0F1214),
+    ember: Color(0xFFF0A35E),
+    sage: Color(0xFF9CCAA2),
+    candle: Color(0xFFF2D38A),
+    coral: Color(0xFFF08A7E),
   );
 
   static const AetherColors light = AetherColors(
-    ground: Color(0xFFF2F2F7),
-    material: Color(0xB8FFFFFF),
+    ground: Color(0xFFECEEEC),
+    material: Color(0xADFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
-    fillControl: Color(0xFFE5E5EA),
-    separator: Color(0xFFC6C6C8),
-    label: Color(0xFF000000),
-    labelSecondary: Color(0xFF636366),
-    tint: Color(0xFF007AFF),
-    onTint: Color(0xFFFFFFFF),
-    agent: Color(0xFFC93400),
-    onState: Color(0xFF248A3D),
-    lightOn: Color(0xFFB25000),
-    alert: Color(0xFFD70015),
+    fillControl: Color(0xFFDFE3E1),
+    separator: Color(0xFFCBD1CE),
+    label: Color(0xFF14181A),
+    labelSecondary: Color(0xFF566064),
+    mist: Color(0xFF2B6779),
+    onMist: Color(0xFFFFFFFF),
+    ember: Color(0xFFA8520F),
+    sage: Color(0xFF3B7445),
+    candle: Color(0xFF8A5F00),
+    coral: Color(0xFFB2382B),
   );
 
   @override
@@ -101,12 +101,12 @@ class AetherColors extends ThemeExtension<AetherColors> {
     Color? separator,
     Color? label,
     Color? labelSecondary,
-    Color? tint,
-    Color? onTint,
-    Color? agent,
-    Color? onState,
-    Color? lightOn,
-    Color? alert,
+    Color? mist,
+    Color? onMist,
+    Color? ember,
+    Color? sage,
+    Color? candle,
+    Color? coral,
   }) {
     return AetherColors(
       ground: ground ?? this.ground,
@@ -116,12 +116,12 @@ class AetherColors extends ThemeExtension<AetherColors> {
       separator: separator ?? this.separator,
       label: label ?? this.label,
       labelSecondary: labelSecondary ?? this.labelSecondary,
-      tint: tint ?? this.tint,
-      onTint: onTint ?? this.onTint,
-      agent: agent ?? this.agent,
-      onState: onState ?? this.onState,
-      lightOn: lightOn ?? this.lightOn,
-      alert: alert ?? this.alert,
+      mist: mist ?? this.mist,
+      onMist: onMist ?? this.onMist,
+      ember: ember ?? this.ember,
+      sage: sage ?? this.sage,
+      candle: candle ?? this.candle,
+      coral: coral ?? this.coral,
     );
   }
 
@@ -136,37 +136,41 @@ class AetherColors extends ThemeExtension<AetherColors> {
       separator: Color.lerp(separator, other.separator, t)!,
       label: Color.lerp(label, other.label, t)!,
       labelSecondary: Color.lerp(labelSecondary, other.labelSecondary, t)!,
-      tint: Color.lerp(tint, other.tint, t)!,
-      onTint: Color.lerp(onTint, other.onTint, t)!,
-      agent: Color.lerp(agent, other.agent, t)!,
-      onState: Color.lerp(onState, other.onState, t)!,
-      lightOn: Color.lerp(lightOn, other.lightOn, t)!,
-      alert: Color.lerp(alert, other.alert, t)!,
+      mist: Color.lerp(mist, other.mist, t)!,
+      onMist: Color.lerp(onMist, other.onMist, t)!,
+      ember: Color.lerp(ember, other.ember, t)!,
+      sage: Color.lerp(sage, other.sage, t)!,
+      candle: Color.lerp(candle, other.candle, t)!,
+      coral: Color.lerp(coral, other.coral, t)!,
     );
   }
 }
 
 abstract final class AetherFonts {
-  /// CSS stack: -apple-system, "SF Pro Display", "SF Pro Text", "Inter", system-ui, "Segoe UI", sans-serif
-  static const List<String> sansFallback = <String>['Inter', 'Segoe UI'];
+  /// CSS stack: "Hanken Grotesk", system-ui, "Segoe UI", sans-serif
+  static const List<String> sansFallback = <String>['Hanken Grotesk', 'Segoe UI'];
 }
 
 abstract final class AetherText {
   // Display
-  /// The time, once per screen. Thin weight, like the Lock Screen.
-  static const TextStyle clock = TextStyle(fontSize: 176.0, height: 0.9545, fontWeight: FontWeight.w200, letterSpacing: -5.28);
+  /// The clock when nobody is near the screen. Readable from across the room.
+  static const TextStyle clockFar = TextStyle(fontSize: 260.0, height: 0.9231, fontWeight: FontWeight.w200, letterSpacing: -10.4);
+  /// The clock when someone stands at the screen and the widgets are showing.
+  static const TextStyle clockNear = TextStyle(fontSize: 120.0, height: 0.9667, fontWeight: FontWeight.w200, letterSpacing: -3.6);
   /// The one sentence that matters: a question from Aether, the next event.
-  static const TextStyle largeTitle = TextStyle(fontSize: 34.0, height: 1.2059, fontWeight: FontWeight.w700);
+  static const TextStyle largeTitle = TextStyle(fontSize: 36.0, height: 1.1667, fontWeight: FontWeight.w600, letterSpacing: -0.36);
   // Text
+  /// The single line under the far clock. One line, the most useful thing right now.
+  static const TextStyle glance = TextStyle(fontSize: 30.0, height: 1.2667, fontWeight: FontWeight.w400);
   /// Widget titles, row titles, room names.
   static const TextStyle title = TextStyle(fontSize: 22.0, height: 1.2727, fontWeight: FontWeight.w600);
   /// Button labels and emphasized lines.
   static const TextStyle headline = TextStyle(fontSize: 19.0, height: 1.3158, fontWeight: FontWeight.w600);
-  /// Aether's replies and running text. 19px because the screen is read from across a room.
+  /// Aether's replies and running text.
   static const TextStyle body = TextStyle(fontSize: 19.0, height: 1.3684, fontWeight: FontWeight.w400);
   /// Secondary lines in label-secondary.
   static const TextStyle footnote = TextStyle(fontSize: 15.0, height: 1.3333, fontWeight: FontWeight.w400);
-  /// Widget headers, sentence case, in label-secondary or the widget's own colour.
+  /// Widget headers, sentence case.
   static const TextStyle caption = TextStyle(fontSize: 13.0, height: 1.3846, fontWeight: FontWeight.w600);
 }
 
@@ -177,15 +181,17 @@ abstract final class AetherSpace {
   static const double space4 = 16.0;
   /// Widget and sheet padding.
   static const double space6 = 24.0;
-  /// Screen margin.
+  /// Screen margin when near.
   static const double space12 = 48.0;
+  /// Screen margin when far: the clock floats with room around it.
+  static const double space20 = 80.0;
 }
 
 abstract final class AetherRadius {
-  /// Rows in a grouped list, small tiles.
-  static const double radiusSm = 14.0;
+  /// List rows, home tiles.
+  static const double radiusSm = 16.0;
   /// Widgets and sheets.
-  static const double radiusLg = 28.0;
-  /// Buttons, icon circles, the agent orb.
+  static const double radiusLg = 32.0;
+  /// Buttons, icon discs, the Now bar, the orb.
   static const double radiusFull = 999.0;
 }

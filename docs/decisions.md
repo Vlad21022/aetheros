@@ -108,3 +108,18 @@ thermostats are refused with not_allowed until the confirm.request flow exists (
 While Home Assistant is away, controls fail with unavailable and tiles say "Indisponibil":
 the hub never falls back to demo data silently.
 Revisit if: a domain proves safe enough to add (each new rule needs a test).
+
+## 020 - Own visual identity instead of an Apple-like look
+Replaces 015. Graphite and mist palette, a generated sky, Hanken Grotesk (SIL OFL)
+bundled on every platform. Token renames: tint -> mist, agent -> ember,
+on -> sage, light-on -> candle, alert -> coral; clock -> clock-far / clock-near.
+Reason: copying Apple's colours, font and widget style together drifts toward trade
+dress, and a product needs a face of its own. One bundled font also removes the
+SF Pro licensing split. Revisit if: never toward Apple's look; the palette itself can evolve.
+
+## 021 - The screen has two distances
+Far: clock-far, one glance line, the orb. Near: clock-near, widgets, Now bar. The
+switch is driven by presence (and later a distance band), never by a tap; near
+returns to far after 20 s without presence.
+Reason: the screen is read from across the room far more often than it is touched.
+

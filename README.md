@@ -21,7 +21,7 @@ Nothing leaves the house to be thought about.
 | `hub/` | Python service screens connect to | Live state from Home Assistant, tier 0 controls, demo home |
 | `shell/app/` | The Flutter screen app | Ambient screen against the hub |
 | `shell/packages/aether_design/` | Design tokens and theme for Flutter | Generated from `design/` |
-| `design/` | `tokens.json` exported from the AetherOS design system | v2, Apple-oriented |
+| `design/` | `tokens.json` exported from the AetherOS design system | v3, own identity (graphite, mist, Hanken Grotesk) |
 | `tools/` | `gen_tokens.py`: tokens → Dart | |
 | `os/` | Buildroot appliance image for the hub | Milestone 1 (boots in QEMU) |
 | `docs/decisions.md` | Why things are the way they are | |
