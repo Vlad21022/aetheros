@@ -25,7 +25,7 @@ class AmbientScreen extends ConsumerWidget {
           gradient: RadialGradient(
             center: const Alignment(-0.75, -0.85),
             radius: 1.3,
-            colors: [colors.tint.withValues(alpha: 0.20), colors.tint.withValues(alpha: 0)],
+            colors: [colors.mist.withValues(alpha: 0.20), colors.mist.withValues(alpha: 0)],
           ),
         ),
         child: DecoratedBox(
@@ -33,7 +33,7 @@ class AmbientScreen extends ConsumerWidget {
             gradient: RadialGradient(
               center: const Alignment(0.85, 1.1),
               radius: 1.1,
-              colors: [colors.agent.withValues(alpha: 0.13), colors.agent.withValues(alpha: 0)],
+              colors: [colors.ember.withValues(alpha: 0.13), colors.ember.withValues(alpha: 0)],
             ),
           ),
           child: Padding(
@@ -106,7 +106,7 @@ class _ClockColumn extends ConsumerWidget {
         ),
         Row(
           children: [
-            _AgentOrb(color: colors.agent),
+            _AgentOrb(color: colors.ember),
             const SizedBox(width: AetherSpace.space4),
             Flexible(
               child: Column(
@@ -299,11 +299,11 @@ class _TileView extends StatelessWidget {
     final colors = context.aether;
     final text = Theme.of(context).textTheme;
     final (icon, fill) = switch (tile.kind) {
-      'light' => (Icons.lightbulb_outline_rounded, tile.active ? colors.lightOn : colors.fillControl),
-      'lock' => (Icons.lock_outline_rounded, tile.active ? colors.onState : colors.alert),
+      'light' => (Icons.lightbulb_outline_rounded, tile.active ? colors.candle : colors.fillControl),
+      'lock' => (Icons.lock_outline_rounded, tile.active ? colors.sage : colors.coral),
       'climate' => (Icons.thermostat_rounded, colors.fillControl),
-      'computer' => (Icons.desktop_windows_outlined, tile.active ? colors.onState : colors.fillControl),
-      _ => (Icons.circle_outlined, tile.active ? colors.onState : colors.fillControl),
+      'computer' => (Icons.desktop_windows_outlined, tile.active ? colors.sage : colors.fillControl),
+      _ => (Icons.circle_outlined, tile.active ? colors.sage : colors.fillControl),
     };
     // TODO(design): add an on-fill token; dark ink reads on the yellow and green circles.
     final iconColor = fill == colors.fillControl ? colors.label : const Color(0xFF1C1C1E);

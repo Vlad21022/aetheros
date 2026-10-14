@@ -62,17 +62,50 @@ People will ask. The honest answer:
 
 ## Design
 
-- Direction: calm, ambient, premium, Apple-oriented (system font, translucent
-  widgets over a soft wallpaper, iOS colours, Home-style icon circles, iOS sheets).
-  An earlier serif + mono "funky" direction was rejected.
+- Direction: calm, ambient, premium, with **its own identity**: graphite and pale
+  stone, a generated sky that follows the hour, `mist` for what you can touch,
+  `ember` for Aether, Hanken Grotesk everywhere. Two earlier directions were
+  dropped: serif + mono ("funky"), then an Apple-like look with iOS colours and
+  SF Pro (too close to Apple's trade dress).
 - Design system and screens live on claude.ai (links in `CLAUDE.md`).
-- Screens designed so far: ambient at rest; agent asking for confirmation.
-  Next candidates: agent listening and replying (animated orb), room controls sheet,
-  Light theme.
+- Screens designed: far (nobody near), near (someone at the screen, with the Now
+  bar), agent asking for confirmation. Next candidates: agent listening and
+  replying, room controls sheet, night mode, Light theme.
+
+## Learned from Apple HomeView (announced 13 Oct 2026)
+
+HomeView is Apple's $299 home display. It is **not sold in the EU**, so nothing like
+it is officially available in Romania. Patterns worth adopting, in our own form:
+
+- **Two distances.** Far: the clock and one line. Near: widgets and controls.
+  Driven by presence, never by a tap. Needs an optional distance band on the
+  `presence` message (a v1-compatible addition).
+- **Ambients** (our word; never "faces"): Ceas, Fotografii (local library), Casa,
+  Camere, Cer (generative sky that reacts to movement).
+- **Now bar** (our word; never "Live Activities"): a pill for what's happening now,
+  such as a timer, music, or Aether working.
+- **Shared vs. personal.** The home, music and timers are shared; calendars and
+  messages belong to one person and appear only for them.
+- **Contextual offers**, like a timer appearing when a recipe step needs one.
+- **Night mode** dimmed to near-black for bedrooms.
+
+Where AetherOS goes further: everything local (Apple sends hard Siri requests to its
+cloud), it controls the desktop PC, one hub serves many screens, open, in Romanian.
+
+### Legal guardrails (not legal advice; check with a lawyer before any release)
+
+- Copy behaviour, never the look: no Apple layouts, icons, wallpapers or palette.
+- Never use their names in the product: HomeView, Live Activities, faces, Siri,
+  Liquid Retina, Flow. No licensed characters.
+- Don't recreate a specific, distinctive Apple mechanism (e.g. face-gated personal
+  content tied to a nearby phone). Do a freedom-to-operate check before selling.
+- Face recognition is biometric data under GDPR. If used at all: on-device only,
+  opt-in per person, easy to delete. Prefer voice ID or the person's phone being
+  home to unlock personal content.
 
 ## Open questions
 
 - Licence for the open-source release (not chosen yet).
 - Hub hardware.
-- Icon set for non-Apple platforms (outline icons at 1.8px stroke until then).
+- Icon set (outline icons at 1.8px stroke until one is chosen).
 - Which tablet model for the first wall screen.

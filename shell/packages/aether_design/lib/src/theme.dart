@@ -11,12 +11,10 @@ abstract final class AetherTheme {
   static ThemeData light({TargetPlatform? platform}) =>
       _build(AetherColors.light, Brightness.light, platform);
 
-  /// SF Pro is licensed for Apple platforms only, so Apple devices use the
-  /// system font (null here) and every other platform uses Inter.
-  static String? fontFamilyFor(TargetPlatform platform) => switch (platform) {
-        TargetPlatform.iOS || TargetPlatform.macOS => null,
-        _ => AetherFonts.sansFallback.first,
-      };
+  /// One family on every platform: Hanken Grotesk (SIL Open Font License).
+  /// TODO: bundle the font files in this package; until then Flutter falls back
+  /// to the platform font.
+  static String? fontFamilyFor(TargetPlatform platform) => AetherFonts.sansFallback.first;
 
   static ThemeData _build(
     AetherColors colors,
@@ -41,17 +39,17 @@ abstract final class AetherTheme {
       splashFactory: NoSplash.splashFactory,
       colorScheme: ColorScheme(
         brightness: brightness,
-        primary: colors.tint,
-        onPrimary: colors.onTint,
-        secondary: colors.agent,
-        onSecondary: colors.onTint,
-        error: colors.alert,
-        onError: colors.onTint,
+        primary: colors.mist,
+        onPrimary: colors.onMist,
+        secondary: colors.ember,
+        onSecondary: colors.onMist,
+        error: colors.coral,
+        onError: colors.onMist,
         surface: colors.surfaceRaised,
         onSurface: colors.label,
       ),
       textTheme: TextTheme(
-        displayLarge: style(AetherText.clock, colors.label),
+        displayLarge: style(AetherText.clockNear, colors.label),
         headlineLarge: style(AetherText.largeTitle, colors.label),
         titleLarge: style(AetherText.title, colors.label),
         titleMedium: style(AetherText.headline, colors.label),
