@@ -132,3 +132,13 @@ Reason: power is cut for real, and losing the fridge or the hub is not reversibl
 way a light is. Revisit if: Home Assistant's statistics become too slow for the agent's
 questions (then a local time-series store on the hub).
 
+## 023 - The hub tells screens what can be tapped; new control actions are additive
+Reason: the hub decides, screens display. A tile carries `tap` (the action a tap sends) and
+now playing carries `entityId` and `controls`, both computed next to the tier 0 rules, so a
+screen never offers what the router would refuse and holds no rules of its own. A screen
+also never changes a tile by itself: it shows "Se trimite…" until the reply, and the new
+state arrives as state.update. `control.action` gained `next` and `previous`; extending an
+enum on a screen-to-hub message stays within v1 because hub and screens ship from one repo
+and an older hub answers an unknown value with bad_message instead of misbehaving.
+Revisit if: screens and hub are released separately (then new actions need a capability
+handshake in hello/welcome).

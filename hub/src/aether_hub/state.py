@@ -43,12 +43,14 @@ class DemoState:
     LIGHTS = "light.group_on"
     LOCK = "lock.front_door"
     PLAYER = "media_player.living_room"
+    TRACKS = ("Seară", "Dimineață lentă", "Concentrare")
     entities = (LIGHTS, LOCK, "sensor.living_room_temperature", "aether.pc_office", PLAYER)
 
     def __init__(self) -> None:
         self._lights_on = True
         self._locked = True
         self._playing = False
+        self._track = 0
         self._changes: asyncio.Queue[Change] = asyncio.Queue()
 
     async def snapshot(self) -> p.SnapshotPayload:
@@ -65,6 +67,10 @@ class DemoState:
                 self._locked = True
             case self.PLAYER, "media_play_pause":
                 self._playing = not self._playing
+            case self.PLAYER, "media_next_track":
+                self._track = (self._track + 1) % len(self.TRACKS)
+            case self.PLAYER, "media_previous_track":
+                self._track = (self._track - 1) % len(self.TRACKS)
         for update in changed_sections(old, self._build()):
             self._changes.put_nowait(update)
 
@@ -80,6 +86,7 @@ class DemoState:
                         title="Lumini",
                         state="3 aprinse" if self._lights_on else "Stinse",
                         active=self._lights_on,
+                        tap="toggle",
                     ),
                     p.Tile(
                         entityId=self.LOCK,
@@ -108,7 +115,13 @@ class DemoState:
                 note="Demo: datele reale vin din calendar în faza 1.",
             ),
             nowPlaying=p.NowPlaying(
-                source="HomePod sufragerie", title="Seară", subtitle="Playlist", playing=self._playing, progress=0.38
+                source="HomePod sufragerie",
+                title=self.TRACKS[self._track],
+                subtitle="Playlist",
+                playing=self._playing,
+                progress=0.38,
+                entityId=self.PLAYER,
+                controls=["previous", "toggle", "next"],
             ),
         )
 

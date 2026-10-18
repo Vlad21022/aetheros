@@ -86,7 +86,7 @@
       }
     },
     "msg.control": {
-      "description": "screen -> hub. A direct tap on a home tile (tier 0, no model involved).",
+      "description": "screen -> hub. A direct tap on a home tile or a now playing button (tier 0, no model involved).",
       "properties": {
         "type": { "const": "control" },
         "payload": {
@@ -94,7 +94,7 @@
           "required": ["entityId", "action"],
           "properties": {
             "entityId": { "type": "string", "minLength": 1, "maxLength": 255 },
-            "action": { "enum": ["toggle", "turn_on", "turn_off", "set"] },
+            "action": { "enum": ["toggle", "turn_on", "turn_off", "set", "next", "previous"] },
             "value": { "type": ["number", "string", "boolean"] }
           },
           "additionalProperties": false
@@ -322,7 +322,11 @@
               "title": { "type": "string", "maxLength": 60 },
               "state": { "type": "string", "maxLength": 60 },
               "active": { "type": "boolean" },
-              "alert": { "type": "boolean" }
+              "alert": { "type": "boolean" },
+              "tap": {
+                "description": "The control action a tap on this tile sends. Absent: the tile cannot be tapped.",
+                "enum": ["toggle", "turn_on", "turn_off"]
+              }
             },
             "additionalProperties": false
           }
@@ -359,7 +363,18 @@
         "title": { "type": "string", "maxLength": 120 },
         "subtitle": { "type": "string", "maxLength": 120 },
         "playing": { "type": "boolean" },
-        "progress": { "type": "number", "minimum": 0, "maximum": 1 }
+        "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+        "entityId": {
+          "description": "The entity that control messages for playback go to.",
+          "type": "string", "minLength": 1, "maxLength": 255
+        },
+        "controls": {
+          "description": "The control actions that work for this player. Absent: no buttons.",
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 3,
+          "items": { "enum": ["toggle", "next", "previous"] }
+        }
       },
       "additionalProperties": false
     }

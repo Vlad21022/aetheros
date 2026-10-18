@@ -19,7 +19,7 @@ Nothing leaves the house to be thought about.
 |---|---|---|
 | `contracts/` | The hub ↔ screen protocol: JSON Schema, examples, rules | v1 defined |
 | `hub/` | Python service screens connect to | Live state from Home Assistant, tier 0 controls, demo home |
-| `shell/app/` | The Flutter screen app | Ambient screen against the hub |
+| `shell/app/` | The Flutter screen app | Ambient screen with live home data and tappable tiles |
 | `shell/packages/aether_design/` | Design tokens and theme for Flutter | Generated from `design/` |
 | `design/` | `tokens.json` exported from the AetherOS design system | v3, own identity (graphite, mist, Hanken Grotesk) |
 | `tools/` | `gen_tokens.py`: tokens → Dart | |
@@ -46,8 +46,8 @@ Tests: `cd hub && uv run pytest`, `cd shell/app && flutter test`.
 
 0. **Foundation**: monorepo, CI, protocol v1, design tokens
 1. **Hub + tier 0**: Home Assistant connection, direct commands without a model
-2. **Ambient screen on the Mac** with real home data ← *here*
-3. **Agent (tier 1)**: local model, tool calling over MCP, confirmations, action log
+2. **Ambient screen on the Mac** with real home data
+3. **Agent (tier 1)**: local model, tool calling over MCP, confirmations, action log ← *next*
 4. **Voice**: wake word, Whisper, Piper
 5. **Desktop PC**: MCP plugin with allowlisted actions, Wake-on-LAN, tier 2 model
 6. **Tablet screens**: the same Flutter app in kiosk mode on Android

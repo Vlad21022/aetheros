@@ -12,6 +12,7 @@ from typing import Any
 
 from . import protocol as p
 from .config import Entities, TileConfig
+from .tier0 import tap_action
 
 UNAVAILABLE = "Indisponibil"
 SUMMARY_OK = "Totul e în regulă"
@@ -143,7 +144,16 @@ def tile(config: TileConfig, states: States) -> p.Tile:
         case _:
             active = entity.state == "on"
             text = entity.state
-    return p.Tile(entityId=config.entity, kind=kind, title=_fit(title), state=_fit(text), active=active)
+    return p.Tile(
+        **_present(
+            entityId=config.entity,
+            kind=kind,
+            title=_fit(title),
+            state=_fit(text),
+            active=active,
+            tap=tap_action(config.entity, entity.state),
+        )
+    )
 
 
 def weather(entity_id: str | None, states: States) -> p.Weather | None:
@@ -196,6 +206,8 @@ def now_playing(entity_id: str | None, states: States) -> p.NowPlaying | None:
             subtitle=str(subtitle)[:120] if subtitle else None,
             playing=entity.state == "playing",
             progress=progress,
+            entityId=entity.entity_id,
+            controls=_playback_controls(attributes.get("supported_features")) or None,
         )
     )
 
@@ -210,6 +222,23 @@ def snapshot(entities: Entities, states: States, *, connected: bool = True) -> p
             nowPlaying=now_playing(sections.now_playing, states),
         )
     )
+
+
+# MediaPlayerEntityFeature bits in Home Assistant.
+_PAUSE, _PREVIOUS_TRACK, _NEXT_TRACK, _PLAY = 1, 16, 32, 16384
+
+
+def _playback_controls(supported_features: object) -> list[p.PlaybackControl]:
+    """The buttons this player can honour, in the order they are drawn."""
+    features = supported_features if isinstance(supported_features, int) else 0
+    controls: list[p.PlaybackControl] = []
+    if features & _PREVIOUS_TRACK:
+        controls.append("previous")
+    if features & _PLAY and features & _PAUSE:
+        controls.append("toggle")
+    if features & _NEXT_TRACK:
+        controls.append("next")
+    return controls
 
 
 def _present(**fields: Any) -> dict[str, Any]:

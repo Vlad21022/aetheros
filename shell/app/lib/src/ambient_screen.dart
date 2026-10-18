@@ -4,6 +4,7 @@ import 'package:aether_design/aether_design.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'controls.dart';
 import 'format.dart';
 import 'hub_connection.dart';
 import 'protocol.dart';
@@ -131,7 +132,6 @@ class _Widgets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.aether;
     final text = Theme.of(context).textTheme;
     final event = snapshot.nextEvent;
     final playing = snapshot.nowPlaying;
@@ -150,14 +150,8 @@ class _Widgets extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Acasă', style: text.titleLarge),
-                    Flexible(
-                      child: Text(
-                        snapshot.home.summary,
-                        style: text.bodyMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
+                    const SizedBox(width: AetherSpace.space4),
+                    Flexible(child: _HomeSummary(summary: snapshot.home.summary)),
                   ],
                 ),
                 const SizedBox(height: AetherSpace.space4),
@@ -178,74 +172,7 @@ class _Widgets extends StatelessWidget {
         ),
         if (playing != null) ...[
           const SizedBox(height: AetherSpace.space4),
-          _Material(
-            child: Row(
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.fillControl,
-                    borderRadius: BorderRadius.circular(AetherRadius.radiusSm),
-                  ),
-                  child: SizedBox.square(
-                    dimension: 72,
-                    child: Icon(Icons.music_note_outlined, size: 28, color: colors.labelSecondary),
-                  ),
-                ),
-                const SizedBox(width: AetherSpace.space4),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(playing.title, style: text.titleMedium),
-                      Text(
-                        '${playing.subtitle ?? ''} · ${playing.source}${playing.playing ? '' : ' · în pauză'}',
-                        style: text.bodyMedium,
-                      ),
-                      if (playing.progress != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(AetherRadius.radiusFull),
-                            child: LinearProgressIndicator(
-                              value: playing.progress,
-                              minHeight: 4,
-                              color: colors.label,
-                              backgroundColor: colors.label.withValues(alpha: 0.14),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AetherSpace.space4),
-                IconButton(
-                  onPressed: () {},
-                  iconSize: 28,
-                  color: colors.label,
-                  tooltip: 'Piesa anterioară',
-                  icon: const Icon(Icons.fast_rewind_rounded),
-                ),
-                IconButton.filled(
-                  onPressed: () {},
-                  iconSize: 28,
-                  style: IconButton.styleFrom(
-                    backgroundColor: colors.label,
-                    foregroundColor: colors.ground,
-                    minimumSize: const Size(56, 56),
-                  ),
-                  tooltip: playing.playing ? 'Pauză' : 'Redă',
-                  icon: Icon(playing.playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  iconSize: 28,
-                  color: colors.label,
-                  tooltip: 'Piesa următoare',
-                  icon: const Icon(Icons.fast_forward_rounded),
-                ),
-              ],
-            ),
-          ),
+          _NowPlayingCard(playing: playing),
         ],
       ],
     );
@@ -289,15 +216,138 @@ class _EventCard extends ConsumerWidget {
   }
 }
 
-class _TileView extends StatelessWidget {
+/// The line next to "Acasă": the home's summary, or why the last control failed.
+class _HomeSummary extends ConsumerWidget {
+  const _HomeSummary({required this.summary});
+
+  final String summary;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = Theme.of(context).textTheme.bodyMedium!;
+    final notice = ref.watch(controlsProvider.select((controls) => controls.notice));
+    return Semantics(
+      liveRegion: notice != null,
+      child: Text(
+        notice ?? summary,
+        style: notice == null ? style : style.copyWith(color: context.aether.coral),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
+class _NowPlayingCard extends ConsumerWidget {
+  const _NowPlayingCard({required this.playing});
+
+  final NowPlaying playing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.aether;
+    final text = Theme.of(context).textTheme;
+    final entityId = playing.entityId;
+    final waiting =
+        entityId != null && ref.watch(controlsProvider.select((controls) => controls.pending.contains(entityId)));
+
+    /// Null when the player cannot do [action] or a control is on its way.
+    VoidCallback? send(String action) =>
+        !playing.can(action) || waiting ? null : () => ref.read(controlsProvider.notifier).send(entityId!, action);
+
+    return _Material(
+      child: Row(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.fillControl,
+              borderRadius: BorderRadius.circular(AetherRadius.radiusSm),
+            ),
+            child: SizedBox.square(
+              dimension: 72,
+              child: Icon(Icons.music_note_outlined, size: 28, color: colors.labelSecondary),
+            ),
+          ),
+          const SizedBox(width: AetherSpace.space4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(playing.title, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  [
+                    if (playing.subtitle != null) playing.subtitle!,
+                    playing.source,
+                    if (!playing.playing) 'în pauză',
+                  ].join(' · '),
+                  style: text.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (playing.progress != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AetherRadius.radiusFull),
+                      child: LinearProgressIndicator(
+                        value: playing.progress,
+                        minHeight: 4,
+                        color: colors.label,
+                        backgroundColor: colors.label.withValues(alpha: 0.14),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AetherSpace.space4),
+          if (playing.can('previous'))
+            IconButton(
+              onPressed: send('previous'),
+              iconSize: 28,
+              color: colors.label,
+              tooltip: 'Piesa anterioară',
+              icon: const Icon(Icons.fast_rewind_rounded),
+            ),
+          if (playing.can('toggle'))
+            IconButton.filled(
+              onPressed: send('toggle'),
+              iconSize: 28,
+              style: IconButton.styleFrom(
+                backgroundColor: colors.label,
+                foregroundColor: colors.ground,
+                disabledBackgroundColor: colors.label,
+                disabledForegroundColor: colors.ground,
+                minimumSize: const Size(56, 56),
+              ),
+              tooltip: playing.playing ? 'Pauză' : 'Redă',
+              icon: Icon(playing.playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+            ),
+          if (playing.can('next'))
+            IconButton(
+              onPressed: send('next'),
+              iconSize: 28,
+              color: colors.label,
+              tooltip: 'Piesa următoare',
+              icon: const Icon(Icons.fast_forward_rounded),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TileView extends ConsumerWidget {
   const _TileView({required this.tile});
 
   final Tile tile;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.aether;
     final text = Theme.of(context).textTheme;
+    final tap = tile.tap;
+    final waiting = ref.watch(controlsProvider.select((controls) => controls.pending.contains(tile.entityId)));
     final (icon, fill) = switch (tile.kind) {
       'light' => (Icons.lightbulb_outline_rounded, tile.active ? colors.candle : colors.fillControl),
       'lock' => (Icons.lock_outline_rounded, tile.active ? colors.sage : colors.coral),
@@ -308,11 +358,9 @@ class _TileView extends StatelessWidget {
     // TODO(design): add an on-fill token; dark ink reads on the yellow and green circles.
     final iconColor = fill == colors.fillControl ? colors.label : const Color(0xFF1C1C1E);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.label.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(18),
-      ),
+    final radius = BorderRadius.circular(18);
+    final card = DecoratedBox(
+      decoration: BoxDecoration(color: colors.label.withValues(alpha: 0.07), borderRadius: radius),
       child: Padding(
         padding: const EdgeInsets.all(AetherSpace.space4),
         child: Column(
@@ -324,10 +372,29 @@ class _TileView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(tile.title, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(tile.state, style: text.bodyMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  waiting ? 'Se trimite…' : tile.state,
+                  style: text.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+    if (tap == null) return card;
+
+    // The hub said this tile is a button, and which action it sends.
+    return Semantics(
+      button: true,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: waiting ? null : () => ref.read(controlsProvider.notifier).send(tile.entityId, tap),
+          child: card,
         ),
       ),
     );

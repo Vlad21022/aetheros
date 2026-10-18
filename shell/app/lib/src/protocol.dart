@@ -29,11 +29,12 @@ class Envelope {
     );
   }
 
-  static String encode(String type, Map<String, Object?> payload, {String? replyTo}) {
+  /// Builds a frame. Pass [id] to match the reply's replyTo later.
+  static String encode(String type, Map<String, Object?> payload, {String? id, String? replyTo}) {
     return jsonEncode({
       'v': protocolVersion,
       'type': type,
-      'id': _nextId(),
+      'id': id ?? newId(),
       'ts': DateTime.now().toUtc().toIso8601String(),
       if (replyTo != null) 'replyTo': replyTo,
       'payload': payload,
@@ -41,7 +42,7 @@ class Envelope {
   }
 
   static int _counter = 0;
-  static String _nextId() => 's${DateTime.now().millisecondsSinceEpoch}-${_counter++}';
+  static String newId() => 's${DateTime.now().millisecondsSinceEpoch}-${_counter++}';
 }
 
 class Tile {
@@ -50,13 +51,17 @@ class Tile {
         kind = json['kind']! as String,
         title = json['title']! as String,
         state = json['state']! as String,
-        active = json['active']! as bool;
+        active = json['active']! as bool,
+        tap = json['tap'] as String?;
 
   final String entityId;
   final String kind;
   final String title;
   final String state;
   final bool active;
+
+  /// The control action a tap sends. Null: the tile is not a button.
+  final String? tap;
 }
 
 class Home {
@@ -100,13 +105,43 @@ class NowPlaying {
         title = json['title']! as String,
         subtitle = json['subtitle'] as String?,
         playing = json['playing']! as bool,
-        progress = (json['progress'] as num?)?.toDouble();
+        progress = (json['progress'] as num?)?.toDouble(),
+        entityId = json['entityId'] as String?,
+        controls = [...?(json['controls'] as List?)?.cast<String>()];
 
   final String source;
   final String title;
   final String? subtitle;
   final bool playing;
   final double? progress;
+
+  /// Where playback controls go. Null: there is nothing to control.
+  final String? entityId;
+
+  /// The control actions that work for this player: toggle, next, previous.
+  final List<String> controls;
+
+  bool can(String action) => entityId != null && controls.contains(action);
+}
+
+/// The payload of action.result.
+class ActionResult {
+  ActionResult.fromJson(Map<String, Object?> json)
+      : ok = json['ok']! as bool,
+        message = json['message']! as String;
+
+  final bool ok;
+  final String message;
+}
+
+/// The payload of error.
+class HubError {
+  HubError.fromJson(Map<String, Object?> json)
+      : code = json['code']! as String,
+        message = json['message']! as String;
+
+  final String code;
+  final String message;
 }
 
 class Snapshot {

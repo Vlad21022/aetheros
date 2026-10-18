@@ -40,10 +40,12 @@ and a calendar. Then follow the three steps above with `AETHER_HA_URL=http://loc
 | Entity | `control` actions | Home Assistant service |
 |---|---|---|
 | `light.*`, `switch.*` | `toggle`, `turn_on`, `turn_off` | the same name |
-| `media_player.*` | `toggle` | `media_play_pause` |
+| `media_player.*` | `toggle`, `next`, `previous` | `media_play_pause`, `media_next_track`, `media_previous_track` |
 | `lock.*` | `turn_on` | `lock.lock` |
 
-Only entities from `aether.toml` can be controlled; others get `error unknown_entity`.
+The hub also tells screens what is tappable: a tile carries `tap` (lights and switches
+toggle; a lock only while unlocked), and now playing carries the controls its player
+supports. Only entities from `aether.toml` can be controlled; others get `error unknown_entity`.
 Everything else, unlocking included, gets `error not_allowed`. The reply to a control is
 `action.result`; the new state reaches every screen as `state.update`. While Home
 Assistant is away, tiles show "Indisponibil" and controls get `error unavailable`.

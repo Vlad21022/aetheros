@@ -196,6 +196,7 @@ async def test_demo_home_answers_a_control(url):
                 "title": "Lumini",
                 "state": "Stinse",
                 "active": False,
+                "tap": "toggle",
             }
 
 
@@ -221,7 +222,8 @@ async def ha_hub(fake_ha, tmp_path):
     """A hub wired to the stand-in Home Assistant, the way `run` wires it."""
     await fake_ha.set_state("light.office", "off", {"friendly_name": "Birou"})
     await fake_ha.set_state("lock.front_door", "locked")
-    await fake_ha.set_state("media_player.tv", "playing", {"media_title": "Film", "friendly_name": "TV"})
+    player = {"media_title": "Film", "friendly_name": "TV", "supported_features": 16384 | 1 | 32}
+    await fake_ha.set_state("media_player.tv", "playing", player)
     settings = Settings(
         home_assistant=HomeAssistantConfig(url=fake_ha.url, token=TOKEN),
         entities=Entities.model_validate(
@@ -255,6 +257,7 @@ async def test_control_reaches_home_assistant_and_comes_back_as_state(ha_hub, fa
             "title": "Birou",
             "state": "Stinsă",
             "active": False,
+            "tap": "toggle",
         }
         await ws.send(control("light.office", "turn_on"))
         assert (await next_of(ws, "action.result"))["payload"]["ok"] is True
@@ -310,3 +313,28 @@ async def test_home_assistant_going_away_is_said_out_loud(ha_hub, fake_ha):
         await ws.send(control("light.office"))
         error = await next_of(ws, "error")
         assert error["payload"]["code"] == "unavailable"
+
+
+async def test_demo_home_skips_tracks(url):
+    ws, snapshot = await join(url)
+    async with ws:
+        playing = snapshot["payload"]["nowPlaying"]
+        assert (playing["entityId"], playing["controls"]) == (
+            "media_player.living_room",
+            ["previous", "toggle", "next"],
+        )
+        await ws.send(control(playing["entityId"], "next"))
+        update = await next_of(ws, "state.update")
+        assert update["payload"]["value"]["title"] != playing["title"]
+        await ws.send(control(playing["entityId"], "previous"))
+        update = await next_of(ws, "state.update")
+        assert update["payload"]["value"]["title"] == playing["title"]
+
+
+async def test_next_track_reaches_home_assistant(ha_hub, fake_ha):
+    ws, snapshot = await join(ha_hub)
+    async with ws:
+        assert snapshot["payload"]["nowPlaying"]["controls"] == ["toggle", "next"]
+        await ws.send(control("media_player.tv", "next"))
+        assert (await next_of(ws, "action.result"))["payload"]["ok"] is True
+        assert fake_ha.calls == [("media_player", "media_next_track", "media_player.tv")]

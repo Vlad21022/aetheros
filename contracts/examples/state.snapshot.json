@@ -12,7 +12,8 @@
           "kind": "light",
           "title": "Lumini",
           "state": "3 aprinse",
-          "active": true
+          "active": true,
+          "tap": "toggle"
         },
         {
           "entityId": "lock.front_door",
@@ -53,7 +54,9 @@
       "title": "Seară",
       "subtitle": "Playlist",
       "playing": false,
-      "progress": 0.38
+      "progress": 0.38,
+      "entityId": "media_player.living_room",
+      "controls": ["previous", "toggle", "next"]
     }
   }
 }
