@@ -123,3 +123,12 @@ switch is driven by presence (and later a distance band), never by a tap; near
 returns to far after 20 s without presence.
 Reason: the screen is read from across the room far more often than it is touched.
 
+## 022 - Energy through metering smart plugs, history in Home Assistant
+Local-only plugs (Shelly, Zigbee, Tasmota); Home Assistant records the history and the
+hub reads it. An optional `energy` snapshot section carries now, today, cost, a 24-hour
+series and top consumers. Switching a plug off needs confirmation; protected plugs
+(fridge, router, hub) never switch off; the PC's plug waits for the PC to shut down.
+Reason: power is cut for real, and losing the fridge or the hub is not reversible the
+way a light is. Revisit if: Home Assistant's statistics become too slow for the agent's
+questions (then a local time-series store on the hub).
+

@@ -44,6 +44,40 @@ People will ask. The honest answer:
 - Implementation: a small MCP server on Windows with an explicit allowlist. Reference
   for ideas: HASS.Agent. The PC's RTX 5070 doubles as the tier-2 model host.
 
+## Energy
+
+Smart plugs with power metering show what the home consumes and let Aether act on it.
+
+- **Plugs work locally, no cloud.** Good fits: Shelly (Wi-Fi, local API, native in
+  Home Assistant), Zigbee plugs with metering (need a Zigbee dongle on the hub),
+  Tasmota-flashed plugs. Matter energy reporting is still uneven: check the exact model.
+  Romanian sockets are Schuko (type F); check the amp rating for heaters and other big loads.
+- **Optional whole-home meter** in the panel (e.g. Shelly EM / Pro 3EM, fitted by an
+  electrician) for total consumption, not just what goes through plugs.
+- **Home Assistant keeps the history** (recorder, long-term statistics, its energy
+  dashboard). The hub reads it through the same WebSocket API; no database of our own yet.
+- **Protocol:** an optional `energy` section in the snapshot (v1-compatible): power now,
+  today's kWh and cost, a 24-hour series, the top consumers.
+- **Tariff** in lei/kWh lives in `aether.toml`, set by the owner. Prices change; never
+  hard-code them.
+
+What it gives:
+
+- A **Consum** widget on the near screen: now, today, cost, the biggest consumer.
+- **Events from power curves:** "Mașina de spălat a terminat" in the Now bar or as the
+  far screen's glance line. Probably the most useful part day to day.
+- **Agent questions:** "cât a consumat PC-ul azi?", "ce stă în standby noaptea?",
+  "cât m-a costat sesiunea de gaming?".
+- **Scenes:** "plec de acasă" can switch off needless loads.
+
+Safety, because a plug cuts power for real:
+
+- **Protected plugs never switch off:** fridge, freezer, router, the hub itself. Listed in
+  `aether.toml`; the hub refuses with `not_allowed`.
+- **Switching a plug off is a consequential action** (confirmation), unlike lights.
+- **The PC's plug is never cut while the PC is on.** The PC plugin shuts the PC down
+  first; only then may the plug switch off.
+
 ## Hardware
 
 - **Hub:** must be always on, so a dedicated low-power box, not the gaming PC. Options
