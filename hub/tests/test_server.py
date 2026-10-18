@@ -3,6 +3,7 @@
 import asyncio
 import contextlib
 import json
+from datetime import datetime
 
 import pytest
 from fake_ha import TOKEN
@@ -338,3 +339,40 @@ async def test_next_track_reaches_home_assistant(ha_hub, fake_ha):
         await ws.send(control("media_player.tv", "next"))
         assert (await next_of(ws, "action.result"))["payload"]["ok"] is True
         assert fake_ha.calls == [("media_player", "media_next_track", "media_player.tv")]
+
+
+async def test_snapshot_carries_the_glance(url):
+    ws, snapshot = await join(url)
+    async with ws:
+        # The demo weather always has a summary.
+        assert snapshot["payload"]["glance"].endswith("ploaie de la 19:00")
+
+
+async def test_glance_follows_the_weather_and_the_clock():
+    clock = [datetime(2026, 10, 10, 16, 25).astimezone()]
+    source = HomeAssistantState(HA_ENTITIES)
+    source.connected(HA_STATES)
+    hub = Hub(source, Tier0Router([], None), now=lambda: clock[0])
+    async with serving(hub) as url:
+        ws, snapshot = await join(url)
+        async with ws:
+            assert snapshot["payload"]["glance"] == "14° · Înnorat"
+
+            source.state_changed(
+                {
+                    "entity_id": "weather.home",
+                    "new_state": {"entity_id": "weather.home", "state": "rainy", "attributes": {"temperature": 9}},
+                }
+            )
+            update = await next_of(ws, "state.update")
+            assert update["payload"]["section"] == "weather"
+            update = await next_of(ws, "state.update")
+            assert update["payload"] == {"section": "glance", "value": "9° · Ploaie"}
+
+            # Nothing changed: the minute tick sends nothing.
+            await hub.refresh_glance()
+            source.state_changed(
+                {"entity_id": "light.office", "new_state": {"entity_id": "light.office", "state": "on"}}
+            )
+            update = await next_of(ws, "state.update")
+            assert update["payload"]["section"] == "home"

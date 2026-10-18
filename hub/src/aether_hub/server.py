@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from collections.abc import Callable
+from datetime import datetime
 
 from pydantic import ValidationError
 from websockets.asyncio.server import ServerConnection, serve
@@ -17,6 +19,7 @@ from websockets.exceptions import ConnectionClosed
 from . import config
 from . import protocol as p
 from .config import Settings
+from .glance import glance, with_glance
 from .ha_client import HaClient
 from .ha_state import HomeAssistantState
 from .state import DemoState, StateSource
@@ -28,9 +31,17 @@ PATH = "/v1"
 
 
 class Hub:
-    def __init__(self, state: StateSource, router: Tier0Router, name: str = "AetherOS Hub") -> None:
+    def __init__(
+        self,
+        state: StateSource,
+        router: Tier0Router,
+        name: str = "AetherOS Hub",
+        now: Callable[[], datetime] = lambda: datetime.now().astimezone(),
+    ) -> None:
         self.state = state
         self.router = router
+        self.now = now
+        self._glance: str | None = None
         self.name = name
         self.screens: dict[str, ServerConnection] = {}
 
@@ -65,7 +76,9 @@ class Hub:
                         await self._send(
                             ws, p.new(p.Welcome, p.WelcomePayload(hubName=self.name, protocol=1), reply_to=msg.id)
                         )
-                        await self._send(ws, p.new(p.StateSnapshot, await self.state.snapshot()))
+                        await self._send(
+                            ws, p.new(p.StateSnapshot, with_glance(await self.state.snapshot(), self.now()))
+                        )
                     case p.Utterance():
                         await self._on_utterance(ws, msg)
                     case p.Control():
@@ -92,14 +105,34 @@ class Hub:
 
     async def broadcast(self) -> None:
         """Sends every change of the state source to all connected screens. Runs until cancelled."""
+        # What every screen got with its snapshot, so the first change sends no stale glance.
+        self._glance = glance(await self.state.snapshot(), self.now())
         async for change in self.state.updates():
             if isinstance(change, p.SnapshotPayload):
-                msg = p.new(p.StateSnapshot, change)
+                snapshot = with_glance(change, self.now())
+                self._glance = snapshot.glance
+                await self._to_all(p.new(p.StateSnapshot, snapshot))
             else:
-                msg = p.new(p.StateUpdate, change)
-            for ws in list(self.screens.values()):
-                with contextlib.suppress(ConnectionClosed):
-                    await self._send(ws, msg)
+                await self._to_all(p.new(p.StateUpdate, change))
+                await self.refresh_glance()
+
+    async def refresh_glance(self) -> None:
+        """Sends a glance update if the line changed since the last one sent."""
+        text = glance(await self.state.snapshot(), self.now())
+        if text != self._glance:
+            self._glance = text
+            await self._to_all(p.new(p.StateUpdate, p.UpdatePayload(section="glance", value=text)))
+
+    async def tick(self) -> None:
+        """Refreshes the glance at the start of every minute: events start and end with the clock."""
+        while True:
+            await asyncio.sleep(60 - self.now().second)
+            await self.refresh_glance()
+
+    async def _to_all(self, msg: p.Message) -> None:
+        for ws in list(self.screens.values()):
+            with contextlib.suppress(ConnectionClosed):
+                await self._send(ws, msg)
 
     async def _on_control(self, ws: ServerConnection, msg: p.Control) -> None:
         """Tier 0. The new state reaches the screens as a state.update, not in this reply."""
@@ -161,6 +194,7 @@ async def run(settings: Settings, host: str = "0.0.0.0", port: int = 8765) -> No
             log.info("no Home Assistant configured: serving demo data")
         else:
             tasks.create_task(client.run())
+        tasks.create_task(hub.tick())
         await hub.broadcast()
 
 
