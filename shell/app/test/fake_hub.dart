@@ -7,6 +7,7 @@ import 'package:aether_shell/src/protocol.dart';
 /// A hub the tests script by hand.
 class FakeHub implements HubLink {
   final _messages = StreamController<Envelope>.broadcast(sync: true);
+  final _pairingCode = StreamController<String?>.broadcast(sync: true);
 
   /// Every message the screen sent, decoded.
   final sent = <Map<String, Object?>>[];
@@ -14,6 +15,12 @@ class FakeHub implements HubLink {
 
   @override
   Stream<Envelope> get messages => _messages.stream;
+
+  @override
+  Stream<String?> get pairingCode => _pairingCode.stream;
+
+  /// The screen waits to be paired with [code]; null once it is paired.
+  void showCode(String? code) => _pairingCode.add(code);
 
   @override
   bool send(String type, Map<String, Object?> payload, {String? id}) {

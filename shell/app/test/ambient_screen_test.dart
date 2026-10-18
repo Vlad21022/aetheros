@@ -126,6 +126,21 @@ void main() {
     expect(calendar.width, 1280 - 2 * AetherSpace.space12);
   });
 
+  testWidgets('an unpaired screen shows its code and the command for the hub', (tester) async {
+    final hub = await pumpScreen(tester);
+    hub.showCode('482913');
+    await tester.pump();
+    expect(find.text('Asociază ecranul'), findsOneWidget);
+    expect(find.text('482 913'), findsOneWidget);
+    expect(find.text('aether-hub pair 482913'), findsOneWidget);
+    expect(find.text('Lumini'), findsNothing);
+
+    hub.showCode(null);
+    await tester.pump();
+    expect(find.text('Asociază ecranul'), findsNothing);
+    expect(find.text('Lumini'), findsOneWidget);
+  });
+
   testWidgets('far says when the hub is away', (tester) async {
     final hub = await pumpScreen(tester, presence: Distance.far);
     hub.drop();
