@@ -15,3 +15,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+
+flutter:
+  # Hanken Grotesk, SIL Open Font License (fonts/OFL.txt). Static instances of the
+  # variable font from github.com/google/fonts, one file per weight the tokens use.
+  fonts:
+    - family: Hanken Grotesk
+      fonts:
+        - asset: fonts/HankenGrotesk-ExtraLight.ttf
+          weight: 200
+        - asset: fonts/HankenGrotesk-Regular.ttf
+          weight: 400
+        - asset: fonts/HankenGrotesk-SemiBold.ttf
+          weight: 600

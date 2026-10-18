@@ -11,10 +11,10 @@ abstract final class AetherTheme {
   static ThemeData light({TargetPlatform? platform}) =>
       _build(AetherColors.light, Brightness.light, platform);
 
-  /// One family on every platform: Hanken Grotesk (SIL Open Font License).
-  /// TODO: bundle the font files in this package; until then Flutter falls back
-  /// to the platform font.
-  static String? fontFamilyFor(TargetPlatform platform) => AetherFonts.sansFallback.first;
+  /// One family on every platform: Hanken Grotesk, bundled in this package
+  /// (fonts/, SIL Open Font License). Fonts from a package are addressed with
+  /// its `packages/<name>/` prefix.
+  static String? fontFamilyFor(TargetPlatform platform) => 'packages/aether_design/${AetherFonts.sansFallback.first}';
 
   static ThemeData _build(
     AetherColors colors,
