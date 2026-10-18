@@ -142,3 +142,13 @@ enum on a screen-to-hub message stays within v1 because hub and screens ship fro
 and an older hub answers an unknown value with bad_message instead of misbehaving.
 Revisit if: screens and hub are released separately (then new actions need a capability
 handshake in hello/welcome).
+
+## 024 - The hub composes the far screen's glance line
+Reason: the line under the far clock is a choice of what matters most right now, and the
+hub decides while screens display. hub/src/aether_hub/glance.py holds the rules (today's
+next event or until when the current one runs, then the weather summary or reading); the
+hub adds the line to every snapshot, sends a `glance` state.update when it changes, and
+checks again at the start of every minute. `glance` joined the state.update sections, an
+additive enum change like 023: an older screen ignores a section it does not know.
+Revisit if: the agent (tier 1) starts writing the line; it then replaces the rules, which
+stay as the fallback when models are down.

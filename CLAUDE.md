@@ -77,7 +77,9 @@ The platform folders are not committed yet. Once, in `shell/app`:
   `config.py` (env, `.env`, `aether.toml`), `state.py` (`StateSource`, demo home), `ha_client.py`,
   `ha_mapping.py`, `ha_state.py` (Home Assistant), `tier0.py` (rules for `control`)
 - `shell/app/lib/` `main.dart`, `src/protocol.dart`, `src/hub_connection.dart` (`hubProvider`, `snapshotProvider`),
-  `src/controls.dart` (sending `control`, pending and failures), `src/format.dart`, `src/ambient_screen.dart`
+  `src/controls.dart` (sending `control`, pending and failures), `src/presence.dart` (far/near),
+  `src/ambient_screen.dart` with `src/far_view.dart` and `src/near_view.dart`, `src/surfaces.dart`, `src/format.dart`
+- `hub/src/aether_hub/glance.py` the far screen's line under the clock
 - `shell/packages/aether_design/` theme, motion, generated tokens
 - `os/` Buildroot BR2_EXTERNAL tree; see `os/README.md`
 - Design references (owner's claude.ai account): design system
@@ -92,7 +94,10 @@ stand-in Home Assistant (`hub/tests/fake_ha.py`); it was also checked by hand ag
 development Home Assistant in Docker with the `demo` integration.
 Phase 2 is done for controls: the hub marks what is tappable (`tap` on tiles, `controls`
 on now playing), the screen sends `control` and shows failures in the home card
-(`shell/app/lib/src/controls.dart`). Next is phase 3, the agent (tier 1). Keep the demo source for tests and for running without
+(`shell/app/lib/src/controls.dart`). The screen follows design v3: Hanken Grotesk is bundled
+in `aether_design`, and presence switches the far and near layouts (pointer and keyboard on the
+Mac). Energy, the Now bar and a sky that follows the hour wait for their data. Next is phase 3,
+the agent (tier 1). Keep the demo source for tests and for running without
 Home Assistant. The Home Assistant token lives in `hub/.env`, never in the repo.
 
 ## Working style
