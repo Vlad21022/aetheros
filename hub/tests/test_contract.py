@@ -101,3 +101,31 @@ def test_schema_rejects_taps_it_does_not_know(change):
     else:
         payload["nowPlaying"].update(change["nowPlaying"])
     assert not VALIDATOR.is_valid(_message("state.snapshot", payload))
+
+
+def test_glance_travels_in_snapshot_and_update():
+    payload = {"home": {"summary": "", "tiles": []}, "glance": "Sala la 18:30 · ploaie de la 19:00"}
+    VALIDATOR.validate(_message("state.snapshot", payload))
+    assert p.parse(json.dumps(_message("state.snapshot", payload))).payload.glance == payload["glance"]
+    for value in ("Sala până la 19:30", None):
+        update = _message("state.update", {"section": "glance", "value": value})
+        VALIDATOR.validate(update)
+        parsed = p.parse(json.dumps(update))
+        assert parsed.payload.value == value
+        assert json.loads(p.dump(parsed)) == update
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"section": "glance", "value": ""},
+        {"section": "glance", "value": "x" * 121},
+        {"section": "glance", "value": {"temperatureC": 1, "condition": "x"}},
+        {"section": "weather", "value": "Sala la 18:30"},
+    ],
+)
+def test_glance_is_a_short_string_and_only_glance_is_a_string(payload):
+    msg = _message("state.update", payload)
+    assert not VALIDATOR.is_valid(msg)
+    with pytest.raises(ValueError):
+        p.parse(json.dumps(msg))

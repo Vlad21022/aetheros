@@ -145,13 +145,14 @@ class HubError {
 }
 
 class Snapshot {
-  Snapshot({required this.home, this.weather, this.nextEvent, this.nowPlaying});
+  Snapshot({required this.home, this.weather, this.nextEvent, this.nowPlaying, this.glance});
 
   factory Snapshot.fromJson(Map<String, Object?> json) => Snapshot(
         home: Home.fromJson((json['home']! as Map).cast<String, Object?>()),
         weather: _opt(json['weather'], Weather.fromJson),
         nextEvent: _opt(json['nextEvent'], CalendarEvent.fromJson),
         nowPlaying: _opt(json['nowPlaying'], NowPlaying.fromJson),
+        glance: json['glance'] as String?,
       );
 
   final Home home;
@@ -159,16 +160,21 @@ class Snapshot {
   final CalendarEvent? nextEvent;
   final NowPlaying? nowPlaying;
 
-  /// Applies a state.update payload.
+  /// The line under the far clock, composed by the hub.
+  final String? glance;
+
+  /// Applies a state.update payload. Unknown sections are ignored.
   Snapshot apply(Map<String, Object?> update) {
     final value = update['value'];
-    return switch (update['section']) {
-      'home' => Snapshot(home: Home.fromJson((value! as Map).cast()), weather: weather, nextEvent: nextEvent, nowPlaying: nowPlaying),
-      'weather' => Snapshot(home: home, weather: _opt(value, Weather.fromJson), nextEvent: nextEvent, nowPlaying: nowPlaying),
-      'nextEvent' => Snapshot(home: home, weather: weather, nextEvent: _opt(value, CalendarEvent.fromJson), nowPlaying: nowPlaying),
-      'nowPlaying' => Snapshot(home: home, weather: weather, nextEvent: nextEvent, nowPlaying: _opt(value, NowPlaying.fromJson)),
-      _ => this,
-    };
+    final section = update['section'];
+    if (!const {'home', 'weather', 'nextEvent', 'nowPlaying', 'glance'}.contains(section)) return this;
+    return Snapshot(
+      home: section == 'home' ? Home.fromJson((value! as Map).cast()) : home,
+      weather: section == 'weather' ? _opt(value, Weather.fromJson) : weather,
+      nextEvent: section == 'nextEvent' ? _opt(value, CalendarEvent.fromJson) : nextEvent,
+      nowPlaying: section == 'nowPlaying' ? _opt(value, NowPlaying.fromJson) : nowPlaying,
+      glance: section == 'glance' ? value as String? : glance,
+    );
   }
 
   static T? _opt<T>(Object? value, T Function(Map<String, Object?>) parse) =>

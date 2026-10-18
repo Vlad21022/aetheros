@@ -57,6 +57,7 @@
       "progress": 0.38,
       "entityId": "media_player.living_room",
       "controls": ["previous", "toggle", "next"]
-    }
+    },
+    "glance": "Antrenament la sală la 18:30 · ploaie de la 19:00"
   }
 }

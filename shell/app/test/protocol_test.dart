@@ -49,6 +49,17 @@ void main() {
     expect(Envelope.newId(), isNot(Envelope.newId()));
   });
 
+  test('glance arrives with the snapshot and changes with state.update', () {
+    final snapshot = Snapshot.fromJson(Envelope.decode(example('state.snapshot')).payload);
+    expect(snapshot.glance, 'Antrenament la sală la 18:30 · ploaie de la 19:00');
+    final changed = snapshot.apply({'section': 'glance', 'value': 'Antrenament la sală până la 19:30'});
+    expect(changed.glance, 'Antrenament la sală până la 19:30');
+    expect(changed.home.tiles, hasLength(4));
+    expect(changed.nowPlaying, isNotNull);
+    expect(changed.apply({'section': 'glance', 'value': null}).glance, isNull);
+    expect(changed.apply({'section': 'energy', 'value': {}}), same(changed));
+  });
+
   test('state.update with null clears a section', () {
     final snapshot = Snapshot.fromJson(Envelope.decode(example('state.snapshot')).payload);
     final update = Envelope.decode(example('state.update'));

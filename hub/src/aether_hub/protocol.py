@@ -121,11 +121,16 @@ class SnapshotPayload(_Model):
     weather: Weather | None = None
     nextEvent: Event | None = None
     nowPlaying: NowPlaying | None = None
+    glance: str | None = Field(default=None, min_length=1, max_length=120)
+    """The line under the far clock, composed by the hub (glance.py)."""
+
+
+Glance = Annotated[str, Field(min_length=1, max_length=120)]
 
 
 class UpdatePayload(_Model):
-    section: Literal["home", "weather", "nextEvent", "nowPlaying"]
-    value: Home | Weather | Event | NowPlaying | None
+    section: Literal["home", "weather", "nextEvent", "nowPlaying", "glance"]
+    value: Home | Weather | Event | NowPlaying | Glance | None
 
     @model_validator(mode="before")
     @classmethod
@@ -141,6 +146,8 @@ class UpdatePayload(_Model):
     def _home_is_never_null(self) -> UpdatePayload:
         if self.section == "home" and self.value is None:
             raise ValueError("home cannot be cleared")
+        if (self.section == "glance") != isinstance(self.value, str) and self.value is not None:
+            raise ValueError("only glance carries a string")
         return self
 
 

@@ -24,7 +24,7 @@ the files in `examples/`.
 | screen → hub | `hello` | First frame after connecting: who the screen is and what it can do |
 | hub → screen | `welcome` | Reply to `hello` |
 | hub → screen | `state.snapshot` | Everything the ambient screen shows; after `welcome` and on reconnect |
-| hub → screen | `state.update` | One section changed (`home`, `weather`, `nextEvent`, `nowPlaying`) |
+| hub → screen | `state.update` | One section changed (`home`, `weather`, `nextEvent`, `nowPlaying`, `glance`) |
 | screen → hub | `control` | A tap on a home tile or a now playing button. Tier 0: no model involved. Answered with `action.result`, or `error` (`unknown_entity`, `not_allowed`, `unavailable`) |
 | screen → hub | `utterance` | Something the user said or typed |
 | hub → screen | `agent.status` | Drives the orb: idle, listening, thinking, speaking, acting |
