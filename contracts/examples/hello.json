@@ -9,6 +9,7 @@
     "room": "Bucătărie",
     "protocol": 1,
     "locale": "ro-RO",
+    "token": "q8Vh3m0Zr6xYb1Kc9TnL2wPa7sJd5uEf4gHi0oNe",
     "capabilities": {
       "touch": true,
       "microphone": true,

@@ -86,8 +86,31 @@ class HelloPayload(_Model):
     room: str | None = Field(default=None, max_length=80)
     protocol: Literal[1]
     locale: str | None = Field(default=None, max_length=16)
+    token: str | None = Field(default=None, min_length=1, max_length=128)
     capabilities: Capabilities
     size: Size
+
+    def __repr__(self) -> str:
+        # Never print the token, wherever a hello ends up.
+        return f"HelloPayload(screenId={self.screenId!r}, name={self.name!r})"
+
+    __str__ = __repr__
+
+
+class PairRequestPayload(_Model):
+    screenId: str = Field(min_length=1, max_length=64)
+    name: str = Field(max_length=80)
+    code: str = Field(pattern=r"^[0-9]{6}$")
+
+
+class PairResultPayload(_Model):
+    token: str = Field(min_length=1, max_length=128)
+    hubName: str = Field(max_length=80)
+
+    def __repr__(self) -> str:
+        return f"PairResultPayload(hubName={self.hubName!r})"
+
+    __str__ = __repr__
 
 
 class UtterancePayload(_Model):
@@ -194,7 +217,9 @@ class ScreenCommandPayload(_Model):
     value: float | str | None = None
 
 
-ErrorCode = Literal["bad_message", "unsupported_protocol", "unknown_entity", "not_allowed", "unavailable", "internal"]
+ErrorCode = Literal[
+    "bad_message", "unsupported_protocol", "unauthorized", "unknown_entity", "not_allowed", "unavailable", "internal"
+]
 
 
 class ErrorPayload(_Model):
@@ -235,6 +260,16 @@ class Presence(_Envelope):
 class ConfirmResponse(_Envelope):
     type: Literal["confirm.response"]
     payload: ConfirmResponsePayload
+
+
+class PairRequest(_Envelope):
+    type: Literal["pair.request"]
+    payload: PairRequestPayload
+
+
+class PairResult(_Envelope):
+    type: Literal["pair.result"]
+    payload: PairResultPayload
 
 
 class Welcome(_Envelope):
@@ -289,7 +324,9 @@ Message = Annotated[
         Control,
         Presence,
         ConfirmResponse,
+        PairRequest,
         Welcome,
+        PairResult,
         StateSnapshot,
         StateUpdate,
         AgentStatus,

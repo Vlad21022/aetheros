@@ -129,3 +129,19 @@ def test_glance_is_a_short_string_and_only_glance_is_a_string(payload):
     assert not VALIDATOR.is_valid(msg)
     with pytest.raises(ValueError):
         p.parse(json.dumps(msg))
+
+
+@pytest.mark.parametrize("code", ["12345", "1234567", "abcdef", "12 456"])
+def test_pairing_codes_are_six_digits(code):
+    msg = _message("pair.request", {"screenId": "x", "name": "Bucătărie", "code": code})
+    assert not VALIDATOR.is_valid(msg)
+    with pytest.raises(ValueError):
+        p.parse(json.dumps(msg))
+
+
+def test_tokens_stay_out_of_reprs():
+    hello = p.parse((CONTRACTS / "examples" / "hello.json").read_text())
+    result = p.parse((CONTRACTS / "examples" / "pair.result.json").read_text())
+    for msg in (hello, result):
+        token = msg.payload.token
+        assert token not in repr(msg) and token not in str(msg.payload)

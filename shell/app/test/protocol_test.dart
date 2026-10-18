@@ -43,6 +43,13 @@ void main() {
     expect(error.code, isNotEmpty);
   });
 
+  test('parses pair.result and keeps the token out of toString', () {
+    final result = PairResult.fromJson(Envelope.decode(example('pair.result')).payload);
+    expect(result.token, isNotEmpty);
+    expect(result.hubName, 'AetherOS Hub');
+    expect(result.toString(), isNot(contains(result.token)));
+  });
+
   test('encode keeps a given id', () {
     final frame = jsonDecode(Envelope.encode('control', {}, id: 'c1')) as Map<String, Object?>;
     expect(frame['id'], 'c1');

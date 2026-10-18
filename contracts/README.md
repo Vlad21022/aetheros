@@ -6,7 +6,8 @@ the files in `examples/`.
 
 ## Transport
 
-- WebSocket, `ws://<hub>:8765/v1`, local network only.
+- WebSocket over TLS, `wss://<hub>:8765/v1`, local network only. The hub's certificate
+  is its own; a screen pins its SHA-256 fingerprint when it pairs and refuses any other.
 - One JSON message per text frame, UTF-8.
 - Every message has the same envelope:
 
@@ -22,7 +23,9 @@ the files in `examples/`.
 | Direction | type | When |
 |---|---|---|
 | screen → hub | `hello` | First frame after connecting: who the screen is and what it can do |
-| hub → screen | `welcome` | Reply to `hello` |
+| screen → hub | `pair.request` | An unpaired screen asks to be paired; it shows the code it sent |
+| hub → screen | `pair.result` | The owner confirmed the code on the hub; the token for every `hello` |
+| hub → screen | `welcome` | Reply to `hello` with a valid token |
 | hub → screen | `state.snapshot` | Everything the ambient screen shows; after `welcome` and on reconnect |
 | hub → screen | `state.update` | One section changed (`home`, `weather`, `nextEvent`, `nowPlaying`, `glance`) |
 | screen → hub | `control` | A tap on a home tile or a now playing button. Tier 0: no model involved. Answered with `action.result`, or `error` (`unknown_entity`, `not_allowed`, `unavailable`) |
@@ -35,6 +38,14 @@ the files in `examples/`.
 | screen → hub | `presence` | Someone arrived at or left the screen |
 | hub → screen | `screen.command` | Dim, wake, brightness, theme |
 | both | `error` | The message in `replyTo` could not be handled |
+
+## Pairing
+
+A screen without a token sends `pair.request` with a six-digit code it shows on its own
+display. The owner runs `aether-hub pair <code>` on the hub; the hub answers that screen
+with `pair.result` and its token. From then on every `hello` carries the token. Without a
+valid token the hub answers `hello` and anything else except `pair.request` with `error`
+`unauthorized`, and keeps the connection open so the screen can pair.
 
 ## A typical exchange
 

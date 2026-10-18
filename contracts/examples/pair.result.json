@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "pair.result",
+  "id": "h1",
+  "ts": "2026-10-10T13:26:10Z",
+  "replyTo": "s1",
+  "payload": {
+    "token": "q8Vh3m0Zr6xYb1Kc9TnL2wPa7sJd5uEf4gHi0oNe",
+    "hubName": "AetherOS Hub"
+  }
+}

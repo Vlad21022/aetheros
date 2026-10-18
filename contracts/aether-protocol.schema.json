@@ -20,7 +20,9 @@
     { "$ref": "#/$defs/msg.control" },
     { "$ref": "#/$defs/msg.presence" },
     { "$ref": "#/$defs/msg.confirm.response" },
+    { "$ref": "#/$defs/msg.pair.request" },
     { "$ref": "#/$defs/msg.welcome" },
+    { "$ref": "#/$defs/msg.pair.result" },
     { "$ref": "#/$defs/msg.state.snapshot" },
     { "$ref": "#/$defs/msg.state.update" },
     { "$ref": "#/$defs/msg.agent.status" },
@@ -44,6 +46,10 @@
             "room": { "type": "string", "maxLength": 80 },
             "protocol": { "const": 1 },
             "locale": { "type": "string", "maxLength": 16 },
+            "token": {
+              "description": "The token the hub gave this screen in pair.result. Without a valid one the hub answers unauthorized.",
+              "type": "string", "minLength": 1, "maxLength": 128
+            },
             "capabilities": {
               "type": "object",
               "required": ["touch", "microphone", "speaker", "presence"],
@@ -123,6 +129,37 @@
           "properties": {
             "requestId": { "type": "string", "minLength": 1, "maxLength": 64 },
             "optionId": { "type": "string", "minLength": 1, "maxLength": 64 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.pair.request": {
+      "description": "screen -> hub. An unpaired screen asks to be paired. It shows code; the owner confirms it on the hub.",
+      "properties": {
+        "type": { "const": "pair.request" },
+        "payload": {
+          "type": "object",
+          "required": ["screenId", "name", "code"],
+          "properties": {
+            "screenId": { "type": "string", "minLength": 1, "maxLength": 64 },
+            "name": { "type": "string", "maxLength": 80 },
+            "code": { "type": "string", "pattern": "^[0-9]{6}$" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "msg.pair.result": {
+      "description": "hub -> screen. The owner confirmed the code: the screen keeps this token and sends it in every hello.",
+      "properties": {
+        "type": { "const": "pair.result" },
+        "payload": {
+          "type": "object",
+          "required": ["token", "hubName"],
+          "properties": {
+            "token": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "hubName": { "type": "string", "maxLength": 80 }
           },
           "additionalProperties": false
         }
@@ -302,7 +339,7 @@
           "type": "object",
           "required": ["code", "message"],
           "properties": {
-            "code": { "enum": ["bad_message", "unsupported_protocol", "unknown_entity", "not_allowed", "unavailable", "internal"] },
+            "code": { "enum": ["bad_message", "unsupported_protocol", "unauthorized", "unknown_entity", "not_allowed", "unavailable", "internal"] },
             "message": { "type": "string", "maxLength": 300 }
           },
           "additionalProperties": false

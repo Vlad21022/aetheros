@@ -134,6 +134,19 @@ class ActionResult {
   final String message;
 }
 
+/// The payload of pair.result: the token this screen sends in every hello.
+class PairResult {
+  PairResult.fromJson(Map<String, Object?> json)
+      : token = json['token']! as String,
+        hubName = json['hubName']! as String;
+
+  final String token;
+  final String hubName;
+
+  @override
+  String toString() => 'PairResult(hubName: $hubName)';
+}
+
 /// The payload of error.
 class HubError {
   HubError.fromJson(Map<String, Object?> json)

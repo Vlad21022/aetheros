@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "type": "pair.request",
+  "id": "s1",
+  "ts": "2026-10-10T13:25:00Z",
+  "payload": {
+    "screenId": "f3a9c1d2e4b5",
+    "name": "Bucătărie",
+    "code": "482913"
+  }
+}
