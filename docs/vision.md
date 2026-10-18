@@ -34,7 +34,7 @@ People will ask. The honest answer:
   public consumer ordering API (its API is for sellers), so the plan there is a
   "prepared checkout": the agent finds the product and builds the cart, the person pays.
 
-## Desktop PC ideas (the part Siri can't do)
+## Desktop PC ideas
 
 - Wake-on-LAN on, sleep, lock or shut down; open apps and games (Steam, CS2,
   a project in VS Code); audio output, volume, media; status (GPU temperature,
