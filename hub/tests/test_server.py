@@ -3,7 +3,9 @@
 import asyncio
 import contextlib
 import json
+import tempfile
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from fake_ha import TOKEN
@@ -15,10 +17,22 @@ from websockets.asyncio.server import serve
 
 from aether_hub.config import Entities, HomeAssistantConfig, Settings
 from aether_hub.ha_state import HomeAssistantState
+from aether_hub.pairing import Pairing
 from aether_hub.server import Hub, build
 from aether_hub.tier0 import Tier0Router
 
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
+
+# Screens these tests connect as are paired once, in a pairing every test hub shares.
+PAIRING = Pairing(Path(tempfile.mkdtemp(prefix="aether-pairing-")) / "screens.json")
+TOKENS: dict[str, str] = {}
+
+
+def token(screen_id: str) -> str:
+    if screen_id not in TOKENS:
+        TOKENS[screen_id] = PAIRING.add(screen_id, screen_id)
+    return TOKENS[screen_id]
+
 
 HELLO = {
     "v": 1,
@@ -29,6 +43,7 @@ HELLO = {
         "screenId": "test-screen",
         "name": "Test",
         "protocol": 1,
+        "token": token("test-screen"),
         "capabilities": {"touch": True, "microphone": False, "speaker": False, "presence": False},
         "size": {"width": 1280, "height": 800},
     },
@@ -58,14 +73,16 @@ async def receive(ws):
 async def join(url: str, screen_id: str = "test-screen"):
     """Connects a screen and reads its welcome and snapshot."""
     ws = await connect(url, ssl=CLIENT_SSL)
-    await ws.send(json.dumps({**HELLO, "payload": {**HELLO["payload"], "screenId": screen_id}}))
+    await ws.send(
+        json.dumps({**HELLO, "payload": {**HELLO["payload"], "screenId": screen_id, "token": token(screen_id)}})
+    )
     assert (await receive(ws))["type"] == "welcome"
     return ws, await receive(ws)
 
 
 @pytest.fixture
 async def url():
-    async with serving(build(Settings())[0]) as url:
+    async with serving(build(Settings(), PAIRING)[0]) as url:
         yield url
 
 
@@ -83,7 +100,7 @@ async def test_must_say_hello_first(url):
     async with connect(url, ssl=CLIENT_SSL) as ws:
         await ws.send(json.dumps({**HELLO, "type": "presence", "payload": {"present": True}}))
         error = await receive(ws)
-        assert error["payload"]["code"] == "bad_message"
+        assert error["payload"]["code"] == "unauthorized"
 
 
 async def test_garbage_gets_an_error_and_the_connection_stays_open(url):
@@ -120,7 +137,7 @@ HA_STATES = [
 async def test_state_changes_reach_every_screen():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source, Tier0Router([], None))) as url:
+    async with serving(Hub(source, Tier0Router([], None), PAIRING)) as url:
         kitchen, snapshot = await join(url, "kitchen")
         office, _ = await join(url, "office")
         async with kitchen, office:
@@ -140,7 +157,7 @@ async def test_state_changes_reach_every_screen():
 async def test_losing_home_assistant_sends_a_new_snapshot():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source, Tier0Router([], None))) as url:
+    async with serving(Hub(source, Tier0Router([], None), PAIRING)) as url:
         ws, _ = await join(url)
         async with ws:
             source.disconnected()
@@ -155,7 +172,7 @@ async def test_losing_home_assistant_sends_a_new_snapshot():
 async def test_a_screen_that_left_does_not_stop_the_broadcast():
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    async with serving(Hub(source, Tier0Router([], None))) as url:
+    async with serving(Hub(source, Tier0Router([], None), PAIRING)) as url:
         gone, _ = await join(url, "gone")
         stays, _ = await join(url, "stays")
         await gone.close()
@@ -235,7 +252,7 @@ async def ha_hub(fake_ha, tmp_path):
             }
         ),
     )
-    hub, client = build(settings)
+    hub, client = build(settings, PAIRING)
     client._retry_delays = (0.01,)
     connected = asyncio.Event()
     on_connected = client._on_connected
@@ -353,7 +370,7 @@ async def test_glance_follows_the_weather_and_the_clock():
     clock = [datetime(2026, 10, 10, 16, 25).astimezone()]
     source = HomeAssistantState(HA_ENTITIES)
     source.connected(HA_STATES)
-    hub = Hub(source, Tier0Router([], None), now=lambda: clock[0])
+    hub = Hub(source, Tier0Router([], None), PAIRING, now=lambda: clock[0])
     async with serving(hub) as url:
         ws, snapshot = await join(url)
         async with ws:

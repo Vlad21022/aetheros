@@ -99,6 +99,9 @@ class OneEvent:
 
 
 async def test_the_minute_tick_moves_the_glance_with_the_clock():
+    from pathlib import Path
+
+    from aether_hub.pairing import Pairing
     from aether_hub.server import Hub
     from aether_hub.tier0 import Tier0Router
 
@@ -106,6 +109,7 @@ async def test_the_minute_tick_moves_the_glance_with_the_clock():
     hub = Hub(
         OneEvent(event(NOW + timedelta(minutes=5), NOW + timedelta(hours=1))),
         Tier0Router([], None),
+        Pairing(Path("unused") / "screens.json"),
         now=lambda: clock[0],
     )
     await hub.broadcast()  # seeds the last glance; the source has no changes
