@@ -31,3 +31,6 @@ pubspec_overrides.yaml
 
 # Throwaway Home Assistant for development (hub/README.md)
 /hub/ha-dev/
+
+# The hub's own files: TLS certificate, paired screens, admin socket
+/hub/data/

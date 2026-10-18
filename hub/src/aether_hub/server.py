@@ -24,6 +24,7 @@ from .ha_client import HaClient
 from .ha_state import HomeAssistantState
 from .state import DemoState, StateSource
 from .tier0 import Tier0Error, Tier0Router
+from .tls import display, ensure_certificate
 
 log = logging.getLogger("aether_hub")
 
@@ -186,10 +187,13 @@ def build(settings: Settings) -> tuple[Hub, HaClient | None]:
     return Hub(source, Tier0Router(controllable, client)), client
 
 
-async def run(settings: Settings, host: str = "0.0.0.0", port: int = 8765) -> None:
+async def run(settings: Settings, port: int = 8765) -> None:
     hub, client = build(settings)
-    async with serve(hub.handle, host, port), asyncio.TaskGroup() as tasks:
-        log.info("listening on ws://%s:%d%s", host, port, PATH)
+    certificate = ensure_certificate(settings.data_dir)
+    host = settings.host
+    async with serve(hub.handle, host, port, ssl=certificate.server_context()), asyncio.TaskGroup() as tasks:
+        log.info("listening on wss://%s:%d%s", host, port, PATH)
+        log.info("certificate fingerprint %s", display(certificate.fingerprint))
         if client is None:
             log.info("no Home Assistant configured: serving demo data")
         else:

@@ -19,8 +19,12 @@ from .protocol import TileKind
 ENV_HA_URL = "AETHER_HA_URL"
 ENV_HA_TOKEN = "AETHER_HA_TOKEN"
 ENV_CONFIG = "AETHER_CONFIG"
+ENV_DATA = "AETHER_DATA"
+ENV_HOST = "AETHER_HUB_HOST"
 
 DEFAULT_CONFIG = "aether.toml"
+DEFAULT_DATA = "data"
+DEFAULT_HOST = "0.0.0.0"
 DOTENV = ".env"
 
 _ENTITY_ID = r"^[a-z0-9_]+\.[a-z0-9_]+$"
@@ -64,6 +68,9 @@ class Settings(_Model):
     home_assistant: HomeAssistantConfig | None = None
     """None runs the hub on demo data."""
     entities: Entities = Entities()
+    data_dir: Path = Path(DEFAULT_DATA)
+    """The hub's own files: its TLS certificate, the paired screens, the admin socket."""
+    host: str = DEFAULT_HOST
 
 
 def load_dotenv(path: Path, environ: MutableMapping[str, str]) -> None:
@@ -105,10 +112,14 @@ def load(environ: Mapping[str, str] | None = None, directory: Path | None = None
     env = dict(os.environ if environ is None else environ)
     load_dotenv(directory / DOTENV, env)
 
+    local = {
+        "data_dir": directory / env.get(ENV_DATA, DEFAULT_DATA),
+        "host": env.get(ENV_HOST, DEFAULT_HOST).strip() or DEFAULT_HOST,
+    }
     url = env.get(ENV_HA_URL, "").strip()
     token = env.get(ENV_HA_TOKEN, "").strip()
     if not url and not token:
-        return Settings()
+        return Settings(**local)
     if not url or not token:
         missing = ENV_HA_TOKEN if url else ENV_HA_URL
         raise ConfigError(f"{missing} is not set. Set both {ENV_HA_URL} and {ENV_HA_TOKEN}, or neither for demo data.")
@@ -118,4 +129,4 @@ def load(environ: Mapping[str, str] | None = None, directory: Path | None = None
     except ValidationError:
         raise ConfigError(f"{ENV_HA_URL} must look like http://homeassistant.local:8123") from None
     entities = load_entities(directory / env.get(ENV_CONFIG, DEFAULT_CONFIG))
-    return Settings(home_assistant=home_assistant, entities=entities)
+    return Settings(home_assistant=home_assistant, entities=entities, **local)

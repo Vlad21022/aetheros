@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "AetherOS hub: agent, model router and plugins; screens connect over WebSocket."
 requires-python = ">=3.12"
 dependencies = [
+  "cryptography>=43,<47",
   "pydantic>=2.8,<3",
   "websockets>=13,<16",
 ]

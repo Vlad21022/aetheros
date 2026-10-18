@@ -9,6 +9,7 @@ import pytest
 from fake_ha import TOKEN
 from jsonschema import Draft202012Validator, FormatChecker
 from test_contract import SCHEMA
+from tls_helpers import CLIENT_SSL, SERVER_SSL
 from websockets.asyncio.client import connect
 from websockets.asyncio.server import serve
 
@@ -37,10 +38,10 @@ HELLO = {
 @contextlib.asynccontextmanager
 async def serving(hub: Hub):
     """The hub on a free port, broadcasting, the way `run` starts it."""
-    async with serve(hub.handle, "127.0.0.1", 0) as server:
+    async with serve(hub.handle, "127.0.0.1", 0, ssl=SERVER_SSL) as server:
         broadcast = asyncio.create_task(hub.broadcast())
         try:
-            yield f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1"
+            yield f"wss://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1"
         finally:
             broadcast.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -56,7 +57,7 @@ async def receive(ws):
 
 async def join(url: str, screen_id: str = "test-screen"):
     """Connects a screen and reads its welcome and snapshot."""
-    ws = await connect(url)
+    ws = await connect(url, ssl=CLIENT_SSL)
     await ws.send(json.dumps({**HELLO, "payload": {**HELLO["payload"], "screenId": screen_id}}))
     assert (await receive(ws))["type"] == "welcome"
     return ws, await receive(ws)
@@ -69,7 +70,7 @@ async def url():
 
 
 async def test_hello_gets_welcome_then_snapshot(url):
-    async with connect(url) as ws:
+    async with connect(url, ssl=CLIENT_SSL) as ws:
         await ws.send(json.dumps(HELLO))
         welcome = await receive(ws)
         assert welcome["type"] == "welcome" and welcome["replyTo"] == "s1"
@@ -79,14 +80,14 @@ async def test_hello_gets_welcome_then_snapshot(url):
 
 
 async def test_must_say_hello_first(url):
-    async with connect(url) as ws:
+    async with connect(url, ssl=CLIENT_SSL) as ws:
         await ws.send(json.dumps({**HELLO, "type": "presence", "payload": {"present": True}}))
         error = await receive(ws)
         assert error["payload"]["code"] == "bad_message"
 
 
 async def test_garbage_gets_an_error_and_the_connection_stays_open(url):
-    async with connect(url) as ws:
+    async with connect(url, ssl=CLIENT_SSL) as ws:
         await ws.send("not json")
         assert (await receive(ws))["payload"]["code"] == "bad_message"
         await ws.send(json.dumps(HELLO))
@@ -94,7 +95,7 @@ async def test_garbage_gets_an_error_and_the_connection_stays_open(url):
 
 
 async def test_utterance_gets_status_reply_status(url):
-    async with connect(url) as ws:
+    async with connect(url, ssl=CLIENT_SSL) as ws:
         await ws.send(json.dumps(HELLO))
         await receive(ws)
         await receive(ws)

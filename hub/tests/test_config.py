@@ -99,3 +99,12 @@ def test_the_example_file_is_valid():
         "sensor.living_room_temperature",
     ]
     assert entities.sections.calendar == "calendar.personal"
+
+
+def test_data_dir_and_host(tmp_path):
+    settings = config.load({}, tmp_path)
+    assert settings.data_dir == tmp_path / "data"
+    assert settings.host == "0.0.0.0"
+    settings = config.load({"AETHER_DATA": "/var/lib/aether", "AETHER_HUB_HOST": "192.168.1.20"}, tmp_path)
+    assert str(settings.data_dir) == "/var/lib/aether"
+    assert settings.host == "192.168.1.20"
