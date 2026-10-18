@@ -40,14 +40,16 @@ design first, typed contracts, tests and CI from day one. No vibe-coding.
 ```sh
 # hub (Python 3.12+, uv)
 cd hub && uv sync
-uv run aether-hub                 # ws://127.0.0.1:8765/v1; demo home unless hub/.env sets Home Assistant
+uv run aether-hub                 # wss://127.0.0.1:8765/v1; demo home unless hub/.env sets Home Assistant
+uv run aether-hub pair <code>     # pair the screen that shows this code
+uv run aether-hub screens         # paired screens; `forget <id>` unpairs one
 uv run pytest -q                  # contract + server tests
 uv run ruff check . && uv run ruff format --check .
 
 # screen (Flutter 3.27+)
 cd shell/app && flutter pub get
 flutter run -d macos              # needs the hub running
-flutter run -d macos --dart-define=AETHER_HUB=ws://<hub-ip>:8765/v1
+flutter run -d macos --dart-define=AETHER_HUB=wss://<hub-ip>:8765/v1
 flutter analyze && flutter test
 cd ../packages/aether_design && flutter test
 
@@ -97,7 +99,9 @@ on now playing), the screen sends `control` and shows failures in the home card
 (`shell/app/lib/src/controls.dart`). The screen follows design v3: Hanken Grotesk is bundled
 in `aether_design`, and presence switches the far and near layouts (pointer and keyboard on the
 Mac). Energy, the Now bar and a sky that follows the hour wait for their data. Next is phase 3,
-the agent (tier 1). Keep the demo source for tests and for running without
+the agent (tier 1). Screens pair with the hub (`aether-hub pair <code>`), connect over wss
+pinned to the hub's own certificate, and send a token in every hello (decision 025);
+`hub/data/` holds the certificate, token hashes and the admin socket. Keep the demo source for tests and for running without
 Home Assistant. The Home Assistant token lives in `hub/.env`, never in the repo.
 
 ## Working style

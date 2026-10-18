@@ -152,3 +152,20 @@ checks again at the start of every minute. `glance` joined the state.update sect
 additive enum change like 023: an older screen ignores a section it does not know.
 Revisit if: the agent (tier 1) starts writing the line; it then replaces the rules, which
 stay as the fallback when models are down.
+
+## 025 - Screens pair with the hub; wss with a pinned, self-made certificate
+Reason: the hub controls the home, so the local network alone must not be enough to talk
+to it. A new screen shows a six-digit code and the owner confirms it on the hub
+(`aether-hub pair <code>`); the screen gets a token and sends it in every hello. Without a
+valid token the hub answers unauthorized and only accepts pair.request. The hub keeps only
+token hashes (hub/data/screens.json, owner-only). The owner's commands (pair, screens,
+forget) reach the running hub through an owner-only Unix socket, never the network. The
+hub makes its own TLS certificate on first start; a screen trusts no certificate
+authority, only the fingerprint it pinned when it paired. No exception for a screen on the
+hub's own machine. This changes who may connect, not the shape of any message, so it stays
+within v1: no screen had been installed yet.
+Known gap: during the five minutes of pairing, someone already inside the home network
+could sit between a new screen and the hub, because the screen pins whatever certificate it
+sees then. Revisit if: that matters (the screen then shows the first digits of the
+fingerprint, to compare with the hub's log), or a hub's certificate must change (screens
+pinned to the old one need to be reset and paired again).

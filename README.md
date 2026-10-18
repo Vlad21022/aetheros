@@ -32,7 +32,7 @@ Needs Python 3.12+ with [uv](https://docs.astral.sh/uv/) and Flutter 3.27+.
 
 ```sh
 # 1. the hub
-cd hub && uv sync && uv run aether-hub          # ws://127.0.0.1:8765/v1, demo home
+cd hub && uv sync && uv run aether-hub          # wss://127.0.0.1:8765/v1, demo home
 
 # 2. the screen, in another terminal (first time: see shell/README.md)
 cd shell/app && flutter run -d macos

@@ -6,7 +6,7 @@ Home Assistant service, with no model. The agent and the other plugins come late
 
 ```sh
 uv sync
-uv run aether-hub        # listens on ws://0.0.0.0:8765/v1
+uv run aether-hub        # listens on wss://0.0.0.0:8765/v1 (AETHER_HUB_HOST to change)
 uv run pytest -q
 uv run ruff check . && uv run ruff format --check .
 ```
@@ -35,6 +35,19 @@ Open http://localhost:8123, create a user, add `demo:` to `ha-dev/configuration.
 and restart the container: that gives made-up lights, a lock, weather, a media player
 and a calendar. Then follow the three steps above with `AETHER_HA_URL=http://localhost:8123`.
 
+## Screens and security
+
+Only paired screens may talk to the hub, over TLS:
+
+- On first start the hub makes its own certificate in `hub/data/` (or `AETHER_DATA`) and
+  logs its fingerprint. Keep that folder: screens are pinned to this certificate.
+- A new screen shows a six-digit code. Run `uv run aether-hub pair <code>` on the hub
+  within five minutes; the screen gets a token and connects from then on.
+- `uv run aether-hub screens` lists the paired screens; `uv run aether-hub forget <id>`
+  unpairs one and closes its connection.
+- These commands talk to the running hub through `hub/data/admin.sock`, readable only by
+  the owner. `hub/data/screens.json` keeps token hashes, never tokens.
+
 ## What a tap can do (tier 0)
 
 | Entity | `control` actions | Home Assistant service |
@@ -60,6 +73,7 @@ Assistant is away, tiles show "Indisponibil" and controls get `error unavailable
 - `src/aether_hub/ha_mapping.py` — entity states → tiles and widgets, with the Romanian text
 - `src/aether_hub/ha_state.py` — `HomeAssistantState`, the live `StateSource`
 - `src/aether_hub/tier0.py` — the tier 0 rules
+- `src/aether_hub/tls.py`, `pairing.py`, `admin.py` — the certificate, paired screens, the owner's commands
 - `tests/fake_ha.py` — a stand-in Home Assistant the tests talk to over a real WebSocket
 - `tests/test_contract.py` — schema, examples and models agree
 - `tests/test_server.py` — real WebSocket conversations, every reply checked against the schema

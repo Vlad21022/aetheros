@@ -34,4 +34,13 @@ flutter run -d macos
 ```
 
 To point at a hub on another machine:
-`flutter run -d macos --dart-define=AETHER_HUB=ws://192.168.1.20:8765/v1`
+`flutter run -d macos --dart-define=AETHER_HUB=wss://192.168.1.20:8765/v1`
+
+## Pairing
+
+The first time a screen reaches a hub it shows "Asociază ecranul" with a six-digit code.
+On the hub run `uv run aether-hub pair <code>`; the screen keeps the token it gets and the
+hub's certificate fingerprint, and connects straight away from then on. Name a screen with
+`--dart-define=AETHER_SCREEN_NAME=Bucătărie`. If the hub forgets it (`aether-hub forget`),
+the screen shows a new code. To reset a screen, delete `screen.json` from the app's
+support directory (on macOS: `~/Library/Containers/<bundle id>/Data/Library/Application Support/<bundle id>/`).
