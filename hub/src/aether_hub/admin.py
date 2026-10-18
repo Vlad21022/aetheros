@@ -60,13 +60,21 @@ async def _run(hub: Hub, request: dict[str, Any]) -> dict[str, Any]:
                 }
                 for s in hub.pairing.screens()
             ]
-            return {"ok": True, "message": f"{len(screens)} ecrane asociate.", "screens": screens}
+            return {"ok": True, "message": _count(len(screens)), "screens": screens}
         case "forget":
             screen = await hub.forget(str(request["screenId"]))
             if screen is None:
                 return {"ok": False, "message": f"Niciun ecran asociat cu id-ul {request['screenId']}."}
             return {"ok": True, "message": f"Ecranul „{screen.name}” nu mai e asociat."}
     raise KeyError(request["command"])
+
+
+def _count(n: int) -> str:
+    if n == 0:
+        return "Niciun ecran asociat."
+    if n == 1:
+        return "Un ecran asociat."
+    return f"{n} {'de ' if n % 100 == 0 or n % 100 >= 20 else ''}ecrane asociate."
 
 
 def call(path: Path, request: dict[str, Any], timeout: float = 10.0) -> dict[str, Any]:

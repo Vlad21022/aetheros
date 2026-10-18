@@ -163,3 +163,14 @@ async def test_the_command_line_pairs(hub_and_socket, monkeypatch, capsys):
     with contextlib.suppress(SystemExit):
         await asyncio.to_thread(main, ["screens"])
     assert "Bucătărie" in capsys.readouterr().out
+
+
+def test_the_count_reads_well():
+    from aether_hub.admin import _count
+
+    assert [_count(n) for n in (0, 1, 2, 20)] == [
+        "Niciun ecran asociat.",
+        "Un ecran asociat.",
+        "2 ecrane asociate.",
+        "20 de ecrane asociate.",
+    ]
