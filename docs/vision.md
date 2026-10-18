@@ -34,7 +34,7 @@ People will ask. The honest answer:
   public consumer ordering API (its API is for sellers), so the plan there is a
   "prepared checkout": the agent finds the product and builds the cart, the person pays.
 
-## Desktop PC ideas (the part Siri can't do)
+## Desktop PC ideas
 
 - Wake-on-LAN on, sleep, lock or shut down; open apps and games (Steam, CS2,
   a project in VS Code); audio output, volume, media; status (GPU temperature,
@@ -43,6 +43,40 @@ People will ask. The honest answer:
   off), "mod lucru", "plec de acasă" (PC sleeps or locks, lights off).
 - Implementation: a small MCP server on Windows with an explicit allowlist. Reference
   for ideas: HASS.Agent. The PC's RTX 5070 doubles as the tier-2 model host.
+
+## Energy
+
+Smart plugs with power metering show what the home consumes and let Aether act on it.
+
+- **Plugs work locally, no cloud.** Good fits: Shelly (Wi-Fi, local API, native in
+  Home Assistant), Zigbee plugs with metering (need a Zigbee dongle on the hub),
+  Tasmota-flashed plugs. Matter energy reporting is still uneven: check the exact model.
+  Romanian sockets are Schuko (type F); check the amp rating for heaters and other big loads.
+- **Optional whole-home meter** in the panel (e.g. Shelly EM / Pro 3EM, fitted by an
+  electrician) for total consumption, not just what goes through plugs.
+- **Home Assistant keeps the history** (recorder, long-term statistics, its energy
+  dashboard). The hub reads it through the same WebSocket API; no database of our own yet.
+- **Protocol:** an optional `energy` section in the snapshot (v1-compatible): power now,
+  today's kWh and cost, a 24-hour series, the top consumers.
+- **Tariff** in lei/kWh lives in `aether.toml`, set by the owner. Prices change; never
+  hard-code them.
+
+What it gives:
+
+- A **Consum** widget on the near screen: now, today, cost, the biggest consumer.
+- **Events from power curves:** "Mașina de spălat a terminat" in the Now bar or as the
+  far screen's glance line. Probably the most useful part day to day.
+- **Agent questions:** "cât a consumat PC-ul azi?", "ce stă în standby noaptea?",
+  "cât m-a costat sesiunea de gaming?".
+- **Scenes:** "plec de acasă" can switch off needless loads.
+
+Safety, because a plug cuts power for real:
+
+- **Protected plugs never switch off:** fridge, freezer, router, the hub itself. Listed in
+  `aether.toml`; the hub refuses with `not_allowed`.
+- **Switching a plug off is a consequential action** (confirmation), unlike lights.
+- **The PC's plug is never cut while the PC is on.** The PC plugin shuts the PC down
+  first; only then may the plug switch off.
 
 ## Hardware
 
@@ -62,17 +96,45 @@ People will ask. The honest answer:
 
 ## Design
 
-- Direction: calm, ambient, premium, Apple-oriented (system font, translucent
-  widgets over a soft wallpaper, iOS colours, Home-style icon circles, iOS sheets).
-  An earlier serif + mono "funky" direction was rejected.
+- Direction: calm, ambient, premium, with **its own identity**: graphite and pale
+  stone, a generated sky that follows the hour, `mist` for what you can touch,
+  `ember` for Aether, Hanken Grotesk everywhere. Two earlier directions were
+  dropped: serif + mono ("funky"), then an Apple-like look with iOS colours and
+  SF Pro (too close to Apple's trade dress).
 - Design system and screens live on claude.ai (links in `CLAUDE.md`).
-- Screens designed so far: ambient at rest; agent asking for confirmation.
-  Next candidates: agent listening and replying (animated orb), room controls sheet,
-  Light theme.
+- Screens designed: far (nobody near), near (someone at the screen, with the Now
+  bar), agent asking for confirmation. Next candidates: agent listening and
+  replying, room controls sheet, night mode, Light theme.
+
+## How the screen behaves
+
+- **Two distances.** Far: the clock and one line. Near: widgets and controls.
+  Driven by presence, never by a tap. Needs an optional distance band on the
+  `presence` message (a v1-compatible addition).
+- **Ambients:** Ceas, Fotografii (local library), Casa, Camere, Cer (generative sky
+  that reacts to movement).
+- **Now bar:** a pill for what's happening now, such as a timer, music, or Aether working.
+- **Shared vs. personal.** The home, music and timers are shared; calendars and
+  messages belong to one person and appear only for them.
+- **Contextual offers**, like a timer appearing when a recipe step needs one.
+- **Night mode** dimmed to near-black for bedrooms.
+
+What sets AetherOS apart: everything stays local, it controls the desktop PC, one hub
+serves many screens, and it is open and in Romanian.
+
+### Guardrails (not legal advice; check with a lawyer before any release)
+
+- Our own look and our own names: no other product's layouts, icons, wallpapers,
+  palette or feature names. No licensed characters.
+- No copy of another product's distinctive mechanism. Do a freedom-to-operate check
+  before selling.
+- Face recognition is biometric data under GDPR. If used at all: on-device only,
+  opt-in per person, easy to delete. Prefer voice ID or the person's phone being
+  home to unlock personal content.
 
 ## Open questions
 
 - Licence for the open-source release (not chosen yet).
 - Hub hardware.
-- Icon set for non-Apple platforms (outline icons at 1.8px stroke until then).
+- Icon set (outline icons at 1.8px stroke until one is chosen).
 - Which tablet model for the first wall screen.

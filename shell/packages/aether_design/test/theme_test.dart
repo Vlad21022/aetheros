@@ -8,18 +8,19 @@ void main() {
     final colors = theme.extension<AetherColors>()!;
     expect(colors, AetherColors.dark);
     expect(theme.scaffoldBackgroundColor, AetherColors.dark.ground);
-    expect(theme.colorScheme.primary, AetherColors.dark.tint);
+    expect(theme.colorScheme.primary, AetherColors.dark.mist);
   });
 
-  test('Apple platforms use the system font, others use Inter', () {
-    expect(AetherTheme.fontFamilyFor(TargetPlatform.macOS), isNull);
-    expect(AetherTheme.fontFamilyFor(TargetPlatform.android), 'Inter');
+  test('one family on every platform', () {
+    expect(AetherTheme.fontFamilyFor(TargetPlatform.macOS), 'Hanken Grotesk');
+    expect(AetherTheme.fontFamilyFor(TargetPlatform.android), 'Hanken Grotesk');
     final linux = AetherTheme.light(platform: TargetPlatform.linux);
-    expect(linux.textTheme.bodyLarge!.fontFamily, 'Inter');
+    expect(linux.textTheme.bodyLarge!.fontFamily, 'Hanken Grotesk');
   });
 
-  test('clock style follows the design system', () {
-    expect(AetherText.clock.fontSize, 176);
-    expect(AetherText.clock.fontWeight, FontWeight.w200);
+  test('clock styles follow the design system', () {
+    expect(AetherText.clockFar.fontSize, 260);
+    expect(AetherText.clockNear.fontSize, 120);
+    expect(AetherText.clockNear.fontWeight, FontWeight.w200);
   });
 }
