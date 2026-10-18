@@ -114,7 +114,7 @@ void main() {
     expect(find.text('Totul e în regulă'), findsNothing);
     expect(find.text('3 aprinse'), findsOneWidget);
     final notice = tester.widget<Text>(find.text('Home Assistant nu răspunde.'));
-    expect(notice.style!.color, AetherColors.dark.alert);
+    expect(notice.style!.color, AetherColors.dark.coral);
 
     await tester.pump(Controls.noticeDuration);
     expect(find.text('Totul e în regulă'), findsOneWidget);
