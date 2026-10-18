@@ -43,6 +43,13 @@ void main() {
     expect(File('fonts/OFL.txt').existsSync(), isTrue);
   });
 
+  test('the text theme carries both clocks and the glance line', () {
+    final text = AetherTheme.dark().textTheme;
+    expect(text.displayLarge!.fontSize, AetherText.clockFar.fontSize);
+    expect(text.displayMedium!.fontSize, AetherText.clockNear.fontSize);
+    expect(text.headlineMedium!.fontSize, AetherText.glance.fontSize);
+  });
+
   test('clock styles follow the design system', () {
     expect(AetherText.clockFar.fontSize, 260);
     expect(AetherText.clockNear.fontSize, 120);

@@ -18,4 +18,7 @@ abstract final class AetherMotion {
 
   /// Wake must feel instant.
   static const Duration wake = Duration(milliseconds: 250);
+
+  /// Far and near layouts cross-fade over this long.
+  static const Duration distance = Duration(milliseconds: 500);
 }

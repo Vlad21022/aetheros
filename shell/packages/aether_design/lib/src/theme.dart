@@ -49,7 +49,9 @@ abstract final class AetherTheme {
         onSurface: colors.label,
       ),
       textTheme: TextTheme(
-        displayLarge: style(AetherText.clockNear, colors.label),
+        displayLarge: style(AetherText.clockFar, colors.label),
+        displayMedium: style(AetherText.clockNear, colors.label),
+        headlineMedium: style(AetherText.glance, colors.label),
         headlineLarge: style(AetherText.largeTitle, colors.label),
         titleLarge: style(AetherText.title, colors.label),
         titleMedium: style(AetherText.headline, colors.label),
