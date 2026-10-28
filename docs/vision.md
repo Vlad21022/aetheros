@@ -101,10 +101,20 @@ Safety, because a plug cuts power for real:
   `ember` for Aether, Hanken Grotesk everywhere. Two earlier directions were
   dropped: serif + mono ("funky"), then an Apple-like look with iOS colours and
   SF Pro (too close to Apple's trade dress).
-- Design system and screens live on claude.ai (links in `CLAUDE.md`).
-- Screens designed: far (nobody near), near (someone at the screen, with the Now
-  bar), agent asking for confirmation. Next candidates: agent listening and
-  replying, room controls sheet, night mode, Light theme.
+- Design system and screens live on claude.ai (links in `CLAUDE.md`); copies are in
+  the repo: `design/system.md` (the rules) and `design/screens/` (the artboards).
+- Screens designed: far, near (12-column grid, Consum, Now bar), agent asking for
+  confirmation, and two animated prototypes: the screen coming alive, and Aether
+  from idle to reply. Next candidates: floor plan, Discuții, room controls sheet,
+  night mode, Light theme.
+- **A home that is alive.** Every movement reports something real: the sky is the
+  weather, a tile answers when its device changes, the sparkline draws live power,
+  appliances finishing arrive softly. Nothing moves for decoration. Details and
+  durations in `design/system.md` (Motion).
+- **Aether is one orb** through seven states: repaus, declanșat, ascultă, procesează,
+  acționează, vorbește, revine. `mist` rings are the person's voice, `ember` rings are
+  Aether's. A 3 s follow-up window after each reply needs no wake word. Every exchange
+  is saved to Discuții.
 
 ## How the screen behaves
 
@@ -118,6 +128,15 @@ Safety, because a plug cuts power for real:
   messages belong to one person and appear only for them.
 - **Contextual offers**, like a timer appearing when a recipe step needs one.
 - **Night mode** dimmed to near-black for bedrooms.
+- **Discuții.** Every exchange with Aether is kept as a card on the hub: the question,
+  the answer, what it did, what could come next. Browsable by date and topic, personal
+  ones visible only to their owner. It doubles as the action log.
+- **Visual answers.** Replies can carry structured blocks (a list, steps, a short
+  comparison) beside the text: an optional `blocks` field on `agent.reply`.
+- **More ambients:** *Familie* (shared calendars coloured per person, chores, the week's
+  meals) and *Planul casei* (a calm 2D floor plan with each device in its room and its
+  live state, from Home Assistant's areas). Never people tracked on camera.
+- **Glare:** a matte screen protector on wall tablets.
 
 What sets AetherOS apart: everything stays local, it controls the desktop PC, one hub
 serves many screens, and it is open and in Romanian.
