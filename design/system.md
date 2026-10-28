@@ -9,7 +9,7 @@ AetherOS is a calm screen that lives in the home and an assistant that can act. 
 ## Principles
 
 - **Two distances.** *Far*: the clock (`clock-far`), one `glance` line, the orb. Nothing else. *Near*: the clock moves to `clock-near` and the widgets, home tiles and the Now bar appear. The change is triggered by presence, never by a tap.
-- **The sky is the wallpaper.** A soft gradient over `ground` that follows the time of day: cool blue-grey in the morning, warm at dusk, near-black at night. Generated, never a photo, never Apple's wallpapers.
+- **The sky is the wallpaper.** A soft gradient over `ground` that follows the time of day: cool blue-grey in the morning, warm at dusk, near-black at night. Generated, never a photo, never another product's wallpaper.
 - **One focus.** At most one `surface-raised` sheet on screen. Widgets sit on `material`.
 - **Colour means something.** `mist` is what you can tap. `ember` is Aether. `sage` and `candle` are home state. `coral` needs a person. Nothing is coloured for decoration.
 - **Shared and personal.** The home, music and timers are shared. Calendars and messages belong to one person and only appear for them.
