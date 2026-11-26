@@ -84,6 +84,7 @@ The platform folders are not committed yet. Once, in `shell/app`:
 - `hub/src/aether_hub/glance.py` the far screen's line under the clock
 - `shell/packages/aether_design/` theme, motion, generated tokens
 - `os/` Buildroot BR2_EXTERNAL tree; see `os/README.md`
+- `design/system.md` the design rules (layout, components, motion, Aether's states); `design/screens/` the artboards and prototypes
 - Design references (owner's claude.ai account): design system
   https://claude.ai/artifact/RAREk2tw1REX2ky8PKgBU5 and screens
   https://claude.ai/artifact/3GB5RvUYEjP6Yhunoz5KeZ

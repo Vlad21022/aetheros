@@ -169,3 +169,14 @@ could sit between a new screen and the hub, because the screen pins whatever cer
 sees then. Revisit if: that matters (the screen then shows the first digits of the
 fingerprint, to compare with the hub's log), or a hub's certificate must change (screens
 pinned to the old one need to be reset and paired again).
+
+## 026 - Motion reports something real; Aether is one orb with seven states
+Every animation is driven by a real signal (weather, a device changing, power, an
+appliance finishing, the agent's state); nothing moves for decoration. Aether's states:
+repaus, declanșat (visible in under 300 ms, also the sign the microphone is streaming),
+ascultă, procesează, acționează, vorbește, revine (a 3 s follow-up window without the
+wake word). Only transform and opacity animate; reduced motion gets crossfades.
+Reason: the screen should feel like the living centre of the home without becoming
+noise, and the orb is the honest indicator of when Aether hears and acts.
+Revisit if: the orb's states need more than one visual; add states, never a second element.
+

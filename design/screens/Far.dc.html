@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<title>Departe</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;400;600&amp;display=swap">
+<style>
+body{margin:0;background:#0f1214}
+a{color:#9cc7d4}a:hover{color:#f1efe9}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; box-sizing: border-box; padding: 80px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 16px; align-content: end; background: radial-gradient(900px 520px at 78% 112%, rgba(214,150,104,0.20), rgba(214,150,104,0) 70%), radial-gradient(1200px 700px at 20% -10%, rgba(120,150,175,0.22), rgba(120,150,175,0) 65%), linear-gradient(180deg, #172028 0%, #11161a 55%, #0f1214 100%); color: #f1efe9; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-variant-numeric: tabular-nums">
+
+  <div style="grid-column: 1 / span 12; display: flex; flex-direction: column; min-width: 0">
+    <div style="font-size: 22px; line-height: 28px; font-weight: 600; color: #9aa3a6">Sâmbătă, 10 octombrie</div>
+    <div style="font-size: 260px; line-height: 240px; font-weight: 200; letter-spacing: -0.04em">16:25</div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 32px; margin-top: 24px">
+      <div style="font-size: 30px; line-height: 38px; font-weight: 400">Sala la 18:30 · ia umbrela, plouă de la 19:00</div>
+      <div style="width: 56px; height: 56px; flex-shrink: 0; border-radius: 999px; background: radial-gradient(circle at 38% 34%, #ffe1bd 0%, #f0a35e 46%, rgba(240,163,94,0) 74%); box-shadow: 0 0 36px rgba(240,163,94,0.40)" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
